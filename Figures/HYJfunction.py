@@ -4,10 +4,10 @@ def generate_colors(n, colormap='tab20'):
     colors = [cmap(i / n) for i in range(n)]
     return colors
 
-def create_Map(lon, lat, M, minv, maxv, interv=7, continterv = None, fill=True, ax=None, 
+def create_Map(lon, lat, M, minv, maxv, interv=7, levels=None, continterv = None, fill=True, ax=None, 
                leftlon=-180, rightlon=180, lowerlat=20, upperlat=90, centralLon=0, extend='both', alpha=1,
                fig=None, nrows=1, ncols=1, index=1, figsize=(15, 18),
-               colr='coolwarm',contourcolr='gray', title=None):
+               colr='coolwarm',contourcolr='gray', title=None, ybotomlabel = True):
 
     import matplotlib.pyplot as plt
     import cartopy.crs as ccrs
@@ -28,13 +28,22 @@ def create_Map(lon, lat, M, minv, maxv, interv=7, continterv = None, fill=True, 
     if ax == None:
         ax = fig.add_subplot(nrows, ncols, index, projection = proj)
         ax.set_extent(img_extent, ccrs.PlateCarree())
-        ax.add_feature(cfeature.COASTLINE.with_scale('110m'))
-        ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='gray',linestyle='--',alpha=0.5) #
+        ax.add_feature(cfeature.COASTLINE.with_scale('110m'),color='gray')
+        gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='gray',linestyle='--',alpha=0.5) #
+        if ybotomlabel == False:
+            gl.top_labels = True
+            gl.bottom_labels = False
+        else:
+            gl.top_labels = False
+            gl.bottom_labels = True
+        gl.left_labels = True
+        gl.right_labels = False
 
     if fill==True:
-        cf = ax.contourf(lon,lat,M,transform=ccrs.PlateCarree(),cmap=colr,levels=np.linspace(minv, maxv, interv), extend=extend, alpha=alpha)
+        cf = ax.contourf(lon,lat,M,transform=ccrs.PlateCarree(),cmap=colr,levels=levels, extend=extend, alpha=alpha)
     else:
-        cf = ax.contour(lon,lat,M,transform=ccrs.PlateCarree(),colors=contourcolr,levels=np.arange(minv, maxv+continterv, continterv), negative_linestyles = 'dashed')
+        cf = ax.contour(lon,lat,M,transform=ccrs.PlateCarree(),linewidths=1,
+                        colors=contourcolr,levels=levels, negative_linestyles = 'dashed') #levels=np.arange(minv, maxv+continterv, continterv),
         ax.clabel(cf, inline=True, fontsize=8, fmt='%1.1f', colors=contourcolr, use_clabeltext=True)
 
     if title:

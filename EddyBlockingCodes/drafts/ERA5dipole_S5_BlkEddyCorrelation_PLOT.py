@@ -148,7 +148,7 @@ plt.title('LWA vs. Blocking Persistence Colored by ACNums')
 # add colorbar
 cbar = plt.colorbar(sc, ticks=sorted(set(BlkeventACNums)))
 cbar.set_label('BlkeventACNums')
-cbar.set_ticks(sorted(set(BlkeventACNums)))  # 显示整数标签
+cbar.set_ticks(sorted(set(BlkeventACNums)))  
 plt.tight_layout()
 plt.show()
 plt.savefig(f'test_scatterplot_blktype{typeid}.png')

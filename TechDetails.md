@@ -29,7 +29,7 @@
 
 ---- Blocking identification ----
 # sperate the NH and SH from this point
-1. Blocking track + peaking identification + diversity classifying: /GRL_code/BlockingCodes/S1_Blocking_track_ERA5_daily.py, S2_Blocking_peaking_ERA5.py, S3_Blocking_Diversity_ERA5.py
+1. Blocking track + peaking identification + diversity classifying: /GRL_code/BlockingCodes/S1_Blocking_track_ERA5_daily.py, S1_Blocking_track_ERA5_daily_SH.py
    [Note: the blocking identification is based on daily data (only 00:00 extracted), input data shape: (15706, 181, 360); lat is from 90 to 0, decreasing, in NH]
    outputs: /scratch/bell/hu1029/LGHW/Blocking_diversity_date_daily, etc.
 2. Blocking data organization, put into the 3D-array and plot: /GRL_code/BlockingCodes/S4_Blocking_transfer2array_ATLregion_newATLdefine.py

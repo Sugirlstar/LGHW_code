@@ -19,6 +19,7 @@ def eqlat(Z500, area, lat, hemisphere):
     levs = np.linspace(minlevel, maxlevel, nlat)
     
     #calculate the equivalent latitude
+    # area: the actual area of each grid
     if hemisphere==1:            
         for k in np.arange(nlat):
             A = sum(area[Z500[:,:] <= levs[k]])       #Note, for Z500, the bounded area is where Z500 < contour, becasue Z500 decreases with latitudes in NH and increases with latitudes in SH
@@ -27,7 +28,8 @@ def eqlat(Z500, area, lat, hemisphere):
             fi_t[nlat-1-k] = fi
         
         q_part = np.interp(lat, fi_t[:], levs[::-1])  # A simple interploration that give equivalent qgpv values to each latitude from our data.
-    
+        # levs = f(fi_t), get the f() values when x=lat (get the gqpv values for each latitude)
+
     elif hemisphere==2:
         for k in np.arange(nlat):
             A = sum(area[Z500[:,:] <= levs[k]])      

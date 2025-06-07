@@ -27,10 +27,10 @@ def haversine(lon1, lat1, lon2, lat2): #
     Calculate the great circle distance between two points 
     on the earth (specified in decimal degrees)
     """
-    # transform decimal degrees to radians
+    # 
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
  
-    # haversine equation
+    # haversine
     dlon = lon2 - lon1 
     dlat = lat2 - lat1 
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
@@ -51,13 +51,13 @@ LWA_td = LWA_td.reshape(T4, 4, len(lat), len(lon)).mean(axis=1)
 
 print(LWA_td.shape)
 lat_mid = int(len(lat)/2) + 1 #91
-lat_NH = lat[0:lat_mid-1]
+lat_NH = lat[lat_mid:len(lat)]
 print(lat_NH)
 print(lon)
 nlon = len(lon)
 nlat = len(lat)
 nlat_NH =len(lat_NH)
-LWA_Z = LWA_td[:,0:lat_mid-1,:] # NH only!
+LWA_Z = LWA_td[:,lat_mid:len(lat),:] # SH only!
 
 ### Time Management ###
 Datestamp = pd.date_range(start="1979-01-01", end="2021-12-31")
@@ -99,7 +99,7 @@ for d in np.arange(nday):
     if np.any(labels_new[d,:,0]) == 0 or np.any(labels_new[d,:,-1]) == 0:   ## If there are no events at either -180 or 179.375, then we don't need to do any connection
         continue
             
-    column_0 = np.zeros((nlat_NH,3))       ## We assume there are at most three wave events at column 0 (-180) (actuaaly most of the time there is just one)
+    column_0 = np.zeros((nlat_NH,3))       ## We assume there are at most three wave events at column 0 (-180) (actually most of the time there is just one)
     column_end = np.zeros((nlat_NH,3))
     label_0 = np.zeros(3)
     label_end = np.zeros(3)
@@ -317,7 +317,7 @@ for d in np.arange(nday-1):
         ### make sure the wave event is not in tropics ###
         n_north = 0
         for j in np.arange(len(track_lat)):
-            if track_lat[j]>30:
+            if abs(track_lat[j])>30:
                 n_north+=1
                 
         if day+1 >= Duration and n_large_wave>=5 and n_north>=5:
@@ -335,9 +335,12 @@ for d in np.arange(nday-1):
         for dd in np.arange(day+1):
             lon_d[d+dd][track_lon_index[dd]] = np.nan
             lat_d[d+dd][track_lat_index[dd]] = np.nan
-    print(d)
-
+        
+        print(d)
+        
 print('event tracking done')
+print(np.nanmax(B_freq))
+print(np.nanmin(B_freq))
 
 #%% Save results
 import matplotlib.pyplot as plt
@@ -346,7 +349,7 @@ plt.contourf(lon,lat_NH,B_freq, 20, extend="both", cmap='Reds')
 cb=plt.colorbar()
 plt.xlabel('Longitude')
 plt.ylabel('Latitude')
-plt.savefig('blockingFreq_daily_1979_2021.png')  
+plt.savefig('blockingFreq_daily_1979_2021_SH.png')  
 plt.show()
 plt.close()
 
@@ -390,11 +393,11 @@ for n in np.arange(len(Blocking_date)):
     Blocking_velocity.append( haversine(Blocking_lon[n][0], Blocking_lat[n][0], Blocking_lon[n][-1], Blocking_lat[n][-1])/(duration*24*60*60) )
     
 #%% Save results
-with open("/scratch/bell/hu1029/LGHW/Blocking_peaking_date_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_peaking_date_daily_SH", "wb") as fp:
     pickle.dump(Blocking_peaking_date, fp)
-with open("/scratch/bell/hu1029/LGHW/Blocking_peaking_lon_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_peaking_lon_daily_SH", "wb") as fp:
     pickle.dump(Blocking_peaking_lon, fp)
-with open("/scratch/bell/hu1029/LGHW/Blocking_peaking_lat_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_peaking_lat_daily_SH", "wb") as fp:
     pickle.dump(Blocking_peaking_lat, fp)
 
 # S3 ----------------------------------------------------------
@@ -415,15 +418,14 @@ T4 = T // 4
 LWA_td_C = LWA_td_C[:T4*4]
 LWA_td_C = LWA_td_C.reshape(T4, 4, len(lat), len(lon)).mean(axis=1)
 
-LWA_Z_A = LWA_td_A[:,0:lat_mid-1,:] # NH only!
-LWA_Z_C = LWA_td_C[:,0:lat_mid-1,:] # NH only!
+LWA_Z_A = LWA_td_A[:,lat_mid:len(lat),:] # NH only!
+LWA_Z_C = LWA_td_C[:,lat_mid:len(lat),:] # NH only!
 
 ###### Code for separate 3 types of blocks (ridge, trough, dipole) ######
 #### Method: Focus on the peaking date, calculate the total LWA_AC and LWA_C of the block region ####
 Blocking_ridge_date = [];  Blocking_ridge_lon = []; Blocking_ridge_lat=[];  Blocking_ridge_peaking_date = [];   Blocking_ridge_peaking_lon = []; Blocking_ridge_peaking_lat=[];  Blocking_ridge_duration = [];  Blocking_ridge_velocity = [];    Blocking_ridge_area = [];   Blocking_ridge_peaking_LWA = [];   Blocking_ridge_A = []; Blocking_ridge_C = [];   Blocking_ridge_label =[]
 Blocking_trough_date = []; Blocking_trough_lon =[]; Blocking_trough_lat=[]; Blocking_trough_peaking_date = [];  Blocking_trough_peaking_lon =[]; Blocking_trough_peaking_lat=[]; Blocking_trough_duration = []; Blocking_trough_velocity = [];   Blocking_trough_area = [];  Blocking_trough_peaking_LWA = [];  Blocking_trough_A = []; Blocking_trough_C = []; Blocking_trough_label =[]
 Blocking_dipole_date = []; Blocking_dipole_lon =[]; Blocking_dipole_lat=[]; Blocking_dipole_peaking_date = [];  Blocking_dipole_peaking_lon =[]; Blocking_dipole_peaking_lat=[]; Blocking_dipole_duration= []; Blocking_dipole_velocity =[];    Blocking_dipole_area = [];   Blocking_dipole_peaking_LWA = [];  Blocking_dipole_A = []; Blocking_dipole_C = []; Blocking_dipole_label = []
-lat_range=int(int((90-np.max(Blocking_peaking_lat))/dlat)*2+1)
 lon_range=int(30/dlon)+1
 
 for n in np.arange(len(Blocking_lon)):
@@ -492,15 +494,15 @@ Blocking_diversity_date.append(Blocking_ridge_date);  Blocking_diversity_peaking
 Blocking_diversity_date.append(Blocking_trough_date); Blocking_diversity_peaking_date.append(Blocking_trough_peaking_date); Blocking_diversity_peaking_lat.append(Blocking_trough_peaking_lat); Blocking_diversity_peaking_lon.append(Blocking_trough_peaking_lon); Blocking_diversity_label.append(Blocking_trough_label)    
 Blocking_diversity_date.append(Blocking_dipole_date); Blocking_diversity_peaking_date.append(Blocking_dipole_peaking_date); Blocking_diversity_peaking_lat.append(Blocking_dipole_peaking_lat); Blocking_diversity_peaking_lon.append(Blocking_dipole_peaking_lon); Blocking_diversity_label.append(Blocking_dipole_label)
 
-with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_date_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_date_daily_SH", "wb") as fp:
     pickle.dump(Blocking_diversity_date, fp)
-with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_label_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_label_daily_SH", "wb") as fp:
     pickle.dump(Blocking_diversity_label, fp)
-with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_peaking_date_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_peaking_date_daily_SH", "wb") as fp:
     pickle.dump(Blocking_diversity_peaking_date, fp)
-with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_peaking_lon_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_peaking_lon_daily_SH", "wb") as fp:
     pickle.dump(Blocking_diversity_peaking_lon, fp)
-with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_peaking_lat_daily", "wb") as fp:
+with open("/scratch/bell/hu1029/LGHW/Blocking_diversity_peaking_lat_daily_SH", "wb") as fp:
     pickle.dump(Blocking_diversity_peaking_lat, fp)
 
 print('all done')

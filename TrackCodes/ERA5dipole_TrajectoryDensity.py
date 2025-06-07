@@ -71,6 +71,7 @@ with open('/scratch/bell/hu1029/LGHW/ACZanom_allyearTracks.pkl', 'rb') as file:
     track_data = pickle.load(file)
 
 # extract all the point elements
+track_id_list = np.array([track_id for track_id, track in track_data for _ in track]) 
 time_list = np.array([time for _, track in track_data for (time, _, _) in track])
 y_list = np.array([y for _, track in track_data for (_, y, _) in track]) #lon
 x_list = np.array([x for _, track in track_data for (_, _, x) in track]) #lat
@@ -86,6 +87,25 @@ np.add.at(trackPoints_array, (time_indices, lat_indices, lon_indices), 1)
 
 np.save('/scratch/bell/hu1029/LGHW/ACtrackPoints_array.npy', trackPoints_array)
 trackPoints_frequency = np.nansum(trackPoints_array, axis=0) 
+
+# get the track ID array
+trackPoints_ID = np.zeros((len(datetime_array), len(latNH), len(lon)))
+for t, la, lo, tid in zip(time_indices, lat_indices, lon_indices, track_id_list):
+    trackPoints_ID[t, la, lo] = tid
+np.save('/scratch/bell/hu1029/LGHW/ACtrackPoints_TrackIDarray.npy', trackPoints_ID)
+
+# get the middle point
+trackPoints_middle = np.zeros((len(datetime_array), len(latNH), len(lon)))
+# divide the points by track_id
+tid_dict = defaultdict(list)
+for t, la, lo, tid in zip(time_indices, lat_indices, lon_indices, track_id_list):
+    tid_dict[tid].append((t, la, lo))
+for tid, points in tid_dict.items():
+    points.sort(key=lambda x: x[0])
+    mid_idx = len(points) // 2
+    t, la, lo = points[mid_idx]
+    trackPoints_middle[t, la, lo] = tid
+np.save('/scratch/bell/hu1029/LGHW/ACtrackPoints_middle.npy', trackPoints_middle)
 
 # plot the map -------------------
 fig, ax, cf = create_Map(lon,latNH,trackPoints_frequency,fill=True,fig=None,
@@ -105,6 +125,7 @@ with open('/scratch/bell/hu1029/LGHW/CCZanom_allyearTracks.pkl', 'rb') as file:
     track_data = pickle.load(file)
 
 # extract all the point elements
+track_id_list = np.array([track_id for track_id, track in track_data for _ in track]) 
 time_list = np.array([time for _, track in track_data for (time, _, _) in track])
 y_list = np.array([y for _, track in track_data for (_, y, _) in track]) #lon
 x_list = np.array([x for _, track in track_data for (_, _, x) in track]) #lat
@@ -120,6 +141,25 @@ np.add.at(trackPoints_array, (time_indices, lat_indices, lon_indices), 1)
 
 np.save('/scratch/bell/hu1029/LGHW/CCtrackPoints_array.npy', trackPoints_array)
 trackPoints_frequency = np.nansum(trackPoints_array, axis=0) 
+
+# get the track ID array
+trackPoints_ID = np.zeros((len(datetime_array), len(latNH), len(lon)))
+for t, la, lo, tid in zip(time_indices, lat_indices, lon_indices, track_id_list):
+    trackPoints_ID[t, la, lo] = tid
+np.save('/scratch/bell/hu1029/LGHW/CCtrackPoints_TrackIDarray.npy', trackPoints_ID)
+
+# get the middle point
+trackPoints_middle = np.zeros((len(datetime_array), len(latNH), len(lon)))
+# divide the points by track_id
+tid_dict = defaultdict(list)
+for t, la, lo, tid in zip(time_indices, lat_indices, lon_indices, track_id_list):
+    tid_dict[tid].append((t, la, lo))
+for tid, points in tid_dict.items():
+    points.sort(key=lambda x: x[0])
+    mid_idx = len(points) // 2
+    t, la, lo = points[mid_idx]
+    trackPoints_middle[t, la, lo] = tid
+np.save('/scratch/bell/hu1029/LGHW/CCtrackPoints_middle.npy', trackPoints_middle)
 
 # plot the map -------------------
 fig, ax, cf = create_Map(lon,latNH,trackPoints_frequency,fill=True,fig=None,

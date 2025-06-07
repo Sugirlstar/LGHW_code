@@ -90,6 +90,7 @@ def findCloset(lat,latids):
         closest_idx = np.argmin(diff)
         closest_indices.append(closest_idx)
     return closest_indices
+
 def findClosest(lati, latids):
 
     if isinstance(lati, np.ndarray):  # if lat is an array
