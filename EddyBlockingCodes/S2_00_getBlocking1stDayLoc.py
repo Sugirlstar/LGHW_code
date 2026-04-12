@@ -30,88 +30,127 @@ from multiprocessing import Pool, Manager
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
+# %% dataset settings -------------------------------------------------------------
+datasets = ["ERA5", "MERRA2", "JRA55"]
+
+OUT_DIR_List = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+}
+yearnameList = {
+    "ERA5": "1979_2021",
+    "MERRA2": "1980_2021",
+    "JRA55": "1979_2021"
+}
+timerefFile = {
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
+    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+}
+latrefFile = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+}
+lonrefFile = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+}
+
 # %% 00 prepare
 regions = ["ATL", "NP", "SP"]
 seasons = [ "ALL", "DJF", "JJA"]
 seasonsmonths = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [12, 1, 2], [6, 7, 8]]
 blkTypes = ["Ridge", "Trough", "Dipole"]
-cycTypes = ["AC", "CC"]
 
-# read in LWA
-LWA_td_origin = np.load('/scratch/bell/hu1029/LGHW/LWA_td_1979_2021_ERA5_6hr.npy')  # -90～90, it's from south to north
-LWA_td_origin = LWA_td_origin/100000000 # change the unit to 1e8 
+for dtname in datasets:
 
-# get the first day and location of each blocking event, output as lists, three types:
-for typeid in [1,2,3]:
-    for rgname in regions:
-        for ss in seasons:
+    print(f"Processing dataset: {dtname}", flush=True)
+    OUTDIR = OUT_DIR_List[dtname]
+    INDIR = OUTDIR
+    yearname = yearnameList[dtname]
+    latfile = latrefFile[dtname]
+    lonfile = lonrefFile[dtname]
+    timefile = timerefFile[dtname]
 
-            # attributes for z500
-            lat = np.load("/scratch/bell/hu1029/LGHW/LWA_lat_1979_2021_ERA5_6hr.npy")
-            lon = np.load("/scratch/bell/hu1029/LGHW/LWA_lon_1979_2021_ERA5_6hr.npy")
-            lat_mid = int(len(lat)/2) + 1 
-            if rgname == "SP":
-                Blklat = lat[lat_mid:len(lat)]
-                LWA_td = LWA_td_origin[:,lat_mid:len(lat),:] # keep only the SH
-            else:
-                Blklat = lat[0:lat_mid-1]
-                LWA_td = LWA_td_origin[:,0:lat_mid-1,:] # keep only the NH
-            Blklat = np.flip(Blklat) # make it ascending order (from south to north)
-            LWA_td = np.flip(LWA_td, axis=1) # make it from north to south
-            print(Blklat, flush=True)
-            Blklon = lon 
+    # read in LWA
+    LWA_td_origin = np.load(f'{INDIR}/{dtname}_LWA_td_{yearname}_6hr.npy')  # -90～90, it's from south to north
+    LWA_td_origin = LWA_td_origin/100000000 # change the unit to 1e8 
 
-            # attributes for Track
-            ds = xr.open_dataset('/scratch/bell/hu1029/Data/processed/ERA5_Z500anomaly_subtractseasonal_6hr_1979_2021.nc')
-            timesarr = np.array(ds['time'])
-            datetime_array = pd.to_datetime(timesarr)
-            timei = list(datetime_array)
-            print(len(timei))
+    # get the first day and location of each blocking event, output as lists, three types:
+    for typeid in [1,2,3]:
+        for rgname in regions:
+            for ss in seasons:
 
-            with open(f'/scratch/bell/hu1029/LGHW/SD_BlockingFlagmaskClustersEventList_Type{typeid}_{rgname}_{ss}', "rb") as f:
-                ATLlist = pickle.load(f)
+                # attributes for z500
+                lat = np.load(latfile)
+                lon = np.load(lonfile)
+                lat_mid = int(len(lat)/2) + 1
 
-            # read in all blocking events date list and label array
-            if rgname == "SP":
-                with open("/scratch/bell/hu1029/LGHW/SD_Blocking_diversity_date_daily_SH", "rb") as fp:
-                    Blocking_diversity_date = pickle.load(fp)
-                with open("/scratch/bell/hu1029/LGHW/SD_Blocking_diversity_label_daily_SH", "rb") as fp:
-                    Blocking_diversity_label = pickle.load(fp)
-            else:
-                with open("/scratch/bell/hu1029/LGHW/SD_Blocking_diversity_date_daily_NH", "rb") as fp:
-                    Blocking_diversity_date = pickle.load(fp)
-                with open("/scratch/bell/hu1029/LGHW/SD_Blocking_diversity_label_daily_NH", "rb") as fp:
-                    Blocking_diversity_label = pickle.load(fp)
+                if rgname == "SP":
+                    Blklat = lat[0:lat_mid-1] # increasing lat from -90 to 0
+                    LWA_td = LWA_td_origin[:,0:lat_mid-1,:] # keep only the SH
+                else:
+                    Blklat = lat[lat_mid:len(lat)] # increasing lat from 0 to 90
+                    LWA_td = LWA_td_origin[:,lat_mid:len(lat),:] # keep only the NH
+                Blklon = lon
+                print(Blklat, flush=True)
 
-            # event date and timeid list
-            BlkeventList = Blocking_diversity_date[typeid-1]
-            BlkeventList = [BlkeventList[x] for x in ATLlist] # get the target events only
-            firstday_Date = [sublist[0] for sublist in BlkeventList] # a list of first day of each event
-            first_day_id = [timei.index(date) for date in firstday_Date] # a list of the index of the first day of each event
-            # note: the timei is a 6-hourly time list, while the firstday_Date is for daily time of blocking. 
-            # However, the first day of blocking event is always at 00:00 UTC, so the index of the first day in timei can always be matched.
-            # event label list
-            BlkeventLabel = Blocking_diversity_label[typeid-1]
-            BlkeventLabel = [BlkeventLabel[x] for x in ATLlist] # get the target events only
-            firstdayLabel = [sublist[0] for sublist in BlkeventLabel] # a list of the label of the first day of each event
+                # time management
+                ds = xr.open_dataset(timefile)
+                timesarr = np.array(ds['time'])
+                datetime_array = pd.to_datetime(timesarr)
+                timei = list(datetime_array)
+                print(len(timei))
 
-            lat_values = []
-            lon_values = []
+                with open(f'{INDIR}/{dtname}_SD_BlockingFlagmaskClustersEventList_Type{typeid}_{rgname}_{ss}', "rb") as f:
+                    ATLlist = pickle.load(f)
 
-            for idx, i in enumerate(first_day_id):
-                slice_2d = np.flip(np.array(firstdayLabel[idx]),axis=0) * LWA_td[i,:, :]
-                max_idx = np.unravel_index(np.nanargmax(slice_2d), slice_2d.shape)  # （lat_idx, lon_idx）
-                lat_values.append(Blklat[max_idx[0]])
-                lon_values.append(Blklon[max_idx[1]])
+                # read in all blocking events date list and label array
+                if rgname == "SP":
+                    with open(f'{INDIR}/{dtname}_SD_Blocking_diversity_date_daily_SH', "rb") as fp:
+                        Blocking_diversity_date = pickle.load(fp)
+                    with open(f'{INDIR}/{dtname}_SD_Blocking_diversity_label_daily_SH', "rb") as fp:
+                        Blocking_diversity_label = pickle.load(fp)
+                else:
+                    with open(f'{INDIR}/{dtname}_SD_Blocking_diversity_date_daily_NH', "rb") as fp:
+                        Blocking_diversity_date = pickle.load(fp)
+                    with open(f'{INDIR}/{dtname}_SD_Blocking_diversity_label_daily_NH', "rb") as fp:
+                        Blocking_diversity_label = pickle.load(fp)
 
-            print(len(lon_values), flush=True)
+                # event date and timeid list
+                BlkeventList = Blocking_diversity_date[typeid-1]
+                BlkeventList = [BlkeventList[x] for x in ATLlist] # get the target events only
+                firstday_Date = [sublist[0] for sublist in BlkeventList] # a list of first day of each event
+                first_day_id = [timei.index(date) for date in firstday_Date] # a list of the index of the first day of each event
+                # note: the timei is a 6-hourly time list, while the firstday_Date is for daily time of blocking. 
+                # However, the first day of blocking event is always at 00:00 UTC, so the index of the first day in timei can always be matched.
+                # event label list
+                BlkeventLabel = Blocking_diversity_label[typeid-1]
+                BlkeventLabel = [BlkeventLabel[x] for x in ATLlist] # get the target events only
+                firstdayLabel = [sublist[0] for sublist in BlkeventLabel] # a list of the label of the first day of each event
 
-            #%% Save results
-            with open(f"/scratch/bell/hu1029/LGHW/Blocking1stdayDateList_blkType{typeid}_{rgname}_{ss}", "wb") as fp:
-                pickle.dump(firstday_Date, fp)
-            with open(f"/scratch/bell/hu1029/LGHW/Blocking1stdayLatList_blkType{typeid}_{rgname}_{ss}", "wb") as fp:
-                pickle.dump(lat_values, fp)
-            with open(f"/scratch/bell/hu1029/LGHW/Blocking1stdayLonList_blkType{typeid}_{rgname}_{ss}", "wb") as fp:
-                pickle.dump(lon_values, fp)
+                lat_values = []
+                lon_values = []
 
-print('done')
+                for idx, i in enumerate(first_day_id):
+                    slice_2d = np.array(firstdayLabel[idx]) * LWA_td[i,:, :]
+                    max_idx = np.unravel_index(np.nanargmax(slice_2d), slice_2d.shape)  # （lat_idx, lon_idx）
+                    lat_values.append(Blklat[max_idx[0]])
+                    lon_values.append(Blklon[max_idx[1]])
+
+                print(len(lon_values), flush=True)
+
+                #%% Save results
+                with open(f"{OUTDIR}/{dtname}_Blocking1stdayDateList_blkType{typeid}_{rgname}_{ss}", "wb") as fp:
+                    pickle.dump(firstday_Date, fp)
+                with open(f"{OUTDIR}/{dtname}_Blocking1stdayLatList_blkType{typeid}_{rgname}_{ss}", "wb") as fp:
+                    pickle.dump(lat_values, fp)
+                with open(f"{OUTDIR}/{dtname}_Blocking1stdayLonList_blkType{typeid}_{rgname}_{ss}", "wb") as fp:
+                    pickle.dump(lon_values, fp)
+
+                print(f"{dtname} {rgname} {ss} type{typeid}: saved first day date and location lists.", flush=True)
+
+print('all done')

@@ -42,20 +42,41 @@ import os
 # %% function --------------------------------
 regions = ["ATL", "NP", "SP"]
 seasons = ["DJF", "JJA", "ALL"]
-seasonsmonths = [[12, 1, 2], [6, 7, 8], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
 blkTypes = ["Ridge", "Trough", "Dipole"]
 cycTypes = ["CC", "AC"]
 
-ss = "ALL"
-for eve in ['Blocking','Seeding']:
-    for typeid in [1,2,3]:
-        for rgname in regions:
+datasets = ["ERA5", "MERRA2", "JRA55"]
 
-            with open(f"/scratch/bell/hu1029/LGHW/SD_{eve}FlagmaskClustersEventList_Type{typeid}_{rgname}_{ss}", "rb") as fp:
-                ATLlist = pickle.load(fp)
+OUT_DIR_List = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+}
+yearnameList = {
+    "ERA5": "1979_2021",
+    "MERRA2": "1980_2021",
+    "JRA55": "1979_2021"
+}
 
-            with open(f"{eve}_totalNumber.txt", "a") as f:
-                f.write(f"Total {eve} number, Type{typeid}_{rgname}_{ss}: {len(ATLlist)}\n")
-                print(f"Total {eve} number, Type{typeid}_{rgname}_{ss}: {len(ATLlist)}")
-            
-print('done')
+for dtname in datasets:
+
+    OUT_DIR = OUT_DIR_List[dtname]
+    yearname = yearnameList[dtname]
+    outfile = f"{dtname}_totalNumber.txt"
+
+    with open(outfile, "w") as f:
+
+        for ss in seasons:
+            for eve in ['Blocking','Seeding']:
+                for typeid in [1,2,3]:
+                    for rgname in regions:
+
+                        with open(f"{OUT_DIR}/{dtname}_SD_{eve}FlagmaskClustersEventList_Type{typeid}_{rgname}_{ss}", "rb") as fp:
+                            ATLlist = pickle.load(fp)
+
+                        line = f"{dtname} {eve} Type{typeid}_{rgname}_{ss}: {len(ATLlist)}\n"
+                        f.write(line)
+                        print(line.strip())
+                
+    print(f"{dtname} done")
+    

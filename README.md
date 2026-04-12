@@ -1,19 +1,24 @@
-# Nature_TechDetails
+# Nature_Serendipity Readme
 
-# Project Document
+---
+
+# Intro
 
 > This is the technical document and workflow for the serendipity theory. Including: Data description; Environment setting; TRACK program instruction; Python code for: LWA, BAM, blocking, eddy, eddy-blocking interaction analysis, and figure generating for MS and SI.
+> 
+
+> the  `JupyterDebug.slurm` is for applying the cores running jupyternotebook. Run the slurm first, then ssh to the target server, then select the interpreter in notebook in VScode, as indicated by the slurm output file.
 > 
 
 <aside>
 📌
 
 make sure in slurm script:
-`export PYTHONPATH=/home/hu1029/Nature_Serendipity:$PYTHONPATH`
+`export PYTHONPATH=./Nature_Serendipity:$PYTHONPATH`
 and in notebook, add:
 
 `import sys
-sys.path.insert(0, "/home/hu1029/Nature_Serendipity")`
+sys.path.insert(0, "./Nature_Serendipity")`
 
 </aside>
 
@@ -21,18 +26,29 @@ sys.path.insert(0, "/home/hu1029/Nature_Serendipity")`
 
 ## ⭐️ Data Description
 
-There are three datasets with different coordinates and resolutions used, espcially different order of latitude values (-90 to 90 or 90 to -90):
+There are three datasets with different coordinates and resolutions used, espacially different order of latitude values (-90 to 90 or 90 to -90):
 
 ### Raw data
 
-1. **ERA5 reanalysis pressure levels, 6-houly, 0.25 degree**: https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=overview
-[variable: Geopotential (z), unit: m**2 s*-*2; format: netcdf]
+1. **ERA5 reanalysis pressure levels, 6-houly, 0.25 degree/F128**: https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=overview
+[variable: Geopotential (z), unit: m**2 s*-*2; format: netcdf/grib]
+    
+    > Download process:
+    use python script: `./dataprep_ERA5/S0_downloadERA5Z500_F128.py` and `S0_downloadERA5Z500_originalGrid.py`
+    > 
 2. **MERRA2**: https://disc.gsfc.nasa.gov/datasets/M2I6NPANA_5.12.4/summary?keywords=MERRA-2%20inst6_3d_ana_Np
 [variable: Geopotential height (H), unit: m; format: netcdf]
+    
+    > Download process:
+    login → “Subset/Get Data” → select time → generate download links → .txt file (named e.g., ‘subset_M2I6NPANA_5.12.4_20260412_045649_.txt’) → change it as input in `./dataprep_MERRA2/S0_downloadPick.sh` → run it.
+    > 
 3. **JRA55**: https://gdex.ucar.edu/datasets/d628000/dataaccess/#
 [variable: Geopotential height (isobaric analysis field), unit: gpm; format: grib1]
+    
+    > data download from: [https://gdex.ucar.edu/datasets/d640000/](https://gdex.ucar.edu/datasets/d640000/) (in Data Access → Globus Transfer)
+    > 
 
-### Processed data
+### Processed Geopotential/Z500 data
 
 1. ERA5
     
@@ -54,23 +70,6 @@ There are three datasets with different coordinates and resolutions used, espcia
     also make sanity-check plots:
     **ZanomClim12Months_1dg/F128.png** |
     | S4: divide into single year | **/LGHW/TRACK/ERA5_TRACK_inputdata_geopotentialAnomaly_yearly/ERA5_geopotentialAnomaly_6hr_{year}.nc** | geopotential, F128, lat decreasing | `dataprep_ERA5/S4_divideNCfiles.sh` |
-    - old version
-        
-        
-        | description | file name | details | generated with |
-        | --- | --- | --- | --- |
-        | S3: 1dg, for Blocking | **ERA5_Z500anomaly_subtractseasonal_6hr_1979_2021_1dg.nc** | 6-hourly, 1dg, latitude decreasing (90~-90) | `dataprep_ERA5/S3_Z500anomalyCal.py` |
-        | S3: F128, for TRACK | **ERA5_geopotential500_subtractseasonal_6hr_1979_2021.nc** | 6-hourly, F128, latitude decreasing (90~-90) | `dataprep_ERA5/S3_F128_getZ500anomaly.py` |
-        | S4: F128 anomaly single files | **/TRACK/TRACK_inputdata_geopotentialAnomaly/ERA5_geopotentialAnomaly_6hr_F128_{year}.nc** | output_dir = '…/TRACK/TRACK_inputdata_geopotentialAnomaly'  | `dataprep_ERA5/S4_TrackZanom_divideNCfiles.py` |
-        | S4: F128 geopotential 5-year files | **/TRACK/ERA5_TRACK_inputdata_geopotential/ERA5_Z500_6hr_{year1}_{year2}_F128.nc** | geopotential, 6-hourly, F128, 5-year in a file, for TRACK running | `dataprep_ERA5/S4_combineNCby5years_CDO_F128` |
-        1. Calculate the anomaly
-            
-            
-            | description | file name | details | generated with |
-            | --- | --- | --- | --- |
-            | S3: 1dg, for Blocking | **ERA5_Z500anomaly_subtractseasonal_6hr_1979_2021_1dg.nc** | geopotential height, 6-hourly, 1dg, latitude decreasing (90~-90) | `dataprep_ERA5/S3_Z500anomalyCal.py` |
-            | S3: F128, for TRACK | **ERA5_geopotential500_subtractseasonal_6hr_1979_2021.nc** | geopotential, 6-hourly, F128, latitude decreasing (90~-90) | `dataprep_ERA5/S3_F128_getZ500anomaly.py` |
-            
 2. MERRA2
     
     
@@ -88,6 +87,7 @@ There are three datasets with different coordinates and resolutions used, espcia
     also make sanity-check plots:
     **ZanomClim12Months_1dg/F128.png** |
     | S4: divide into single year | **/LGHW/TRACK/MERRA2_TRACK_inputdata_geopotentialAnomaly_yearly/MERRA2_geopotentialAnomaly_6hr_{year}.nc** | geopotential, F128, lat decreasing | `dataprep_MERRA2/S4_divideNCfiles.sh` |
+    | S5: process U and V data for calculate EKE | **/scratch/bell/hu1029/Data/processed/MERRA2_UV_1dg/MERRA2_U/V_6hr_${y}_1dg.nc** | m/s, at multiple levels, 1dg | `dataprep_MERRA2/S5_UV_RegridMerge.sh` |
     
     > Some files are broken while downloading, use `check_checkFile.sh` and `check_rebuildbad.sh` to check and rebuild.
     > 
@@ -108,8 +108,10 @@ There are three datasets with different coordinates and resolutions used, espcia
     also make sanity-check plots:
     **ZanomClim12Months_1dg/F128.png** |
     | S4: divide into single year | **/LGHW/TRACK/JRA55_TRACK_inputdata_geopotentialAnomaly_yearly/JRA55_geopotentialAnomaly_6hr_{year}.nc** | geopotential, F128, lat decreasing | `dataprep_JRA55/S4_divideNCfiles.sh` |
+    | S5: process U and V data for calculate EKE | **/scratch/bell/hu1029/Data/processed/JRA55_UV_1dg/JRA55_U/V_6hr_${y}_1dg.nc** | m/s, at multiple levels, 1dg | `dataprep_JRA55/S5_UV_RegridMerge.sh` |
     
     > Some files are broken while downloading, use `check_checkFile.sh` and `check_redownload.sh` to check and rebuild.
+    In the end, the dataset is downloaded using Globus Transfer, through: [https://gdex.ucar.edu/datasets/d628000/dataaccess/#](https://gdex.ucar.edu/datasets/d628000/dataaccess/#)
     > 
 
 <aside>
@@ -163,7 +165,7 @@ and sanity-check plots:
 > Code was provided by Zhaoyu, modified based on 6-hourly data, the original code is from /depot/wanglei/data/ERA5_LWA_Z500
 > 
 - Inputs: **{dtname}_Z500_6hr_1980_2021_1dg.nc** (1dg, lat increasing order)
-- Calculate LWA: `./LWAcodes/main2.py` base on the function `LWA_f2.py`
+- Calculate LWA: `main2.py` base on the function `LWA_f2.py` (calculation time: ~12hours for each dataset)
     
     ( Note: in the LWA_f2.py, the latitude of the input .nc file was forced to be decreasing (90~-90). In the `main2.py` , the results are converted to lat-increasing order.)
     
@@ -178,68 +180,116 @@ and sanity-check plots:
     ```
     
 
----
+<aside>
+💡
 
-## ⭐️ Public functions and scripts
+LWA latitude increasing (-90~90), 1dg, 6-hourly
 
-> the  `JupyterDebug.slurm` is for applying the cores running jupyternotebook. Run the slurm first, then ssh to the target server, then select the interpreter in notebook in VScode, as indicated by the slurm output file.
-> 
-
----
+</aside>
 
 ---
 
----
-
-## Blocking and Seeding (./BlockingSeedFinding)
+## ⭐️Blocking and Seeding (./BlockingSeedFinding)
 
 > The code for identifying blocking and seeding events, and selecting the target regions. NH and SH are separately calculated.
 > 
-1. Blocking/Seeding tracking + peaking identification + diversity classifying: `S1_WatershedSeedBlocking_track_ERA5_daily_NH` and `S1_WatershedSeedBlocking_track_ERA5_daily_SH`
-    - Inputs (./LGHW/): **LWA_td_1979_2021_ERA5_6hr.npy**, **LWA_td_A_1979_2021_ERA5_6hr**, **LWA_td_C_1979_2021_ERA5_6hr**
-    - Outputs (./LGHW/):
-        - **SD_{Seeding/Blocking}_peaking_{date/lon/lat}*daily*{NH/SH}** (1d-list, each element represent the peaking date/lat/lon of each event, single value)
-        - **SD_{Seeding/Blocking}Total_date_{NH/SH}** (list[list], each sublist is the dates of each seeding/blocking event)
-        - **SD_{Seeding/Blocking}Total_label_{NH/SH}** (list[list of 2d-array], each sublist is the 2d bool masks of seeding/blocking locations (shape: 90,360; lat decreasing!))
-        - **SD_{Seeding/Blocking}TypeI_{NH/SH}** (list, 1d, represent the type of each event, 1-ridge, 2-trough, 3-dipole)
-        - **SD_{Seeding/Blocking}_diversity_date_daily_{NH/SH}** (list[list of 3 types], [Ridge,Trough,Dipole]; the dates of each event)
-        - **SD_{Seeding/Blocking}_diversity_label_daily_{NH/SH}** (list[list of 3 types], [Ridge,Trough,Dipole]; each sublist is the 2d bool masks of seeding/blocking locations (shape: 90,360; lat decreasing!))
-        - **SD_{Seeding/Blocking}_diversity_peaking_date_daily_{NH/SH}** (list[list of 3 types], [Ridge,Trough,Dipole]; list of the peaking date of each event)
-        - **SD_{Seeding/Blocking}_diversity_peaking_lat_daily_{NH/SH}** (list[list of 3 types], [Ridge,Trough,Dipole]; list of the peaking lat of each event)
-        - **SD_{Seeding/Blocking}_diversity_peaking_lon_daily_{NH/SH}** (list[list of 3 types], [Ridge,Trough,Dipole]; list of the peaking lon of each event)
-    - Figure Outputs: SD_{blocking/seeding}Freq_daily_1979_2021_watershed_{NH/SH}.png
-2. Blocking data organization, put into the 3D-array and plot: `S2_Blocking_transfer2array.py`
-    - Outputs (/scratch/bell/hu1029/LGHW/):
-        - **SD_{eve}FlagmaskClusters_Type{type_idx+1}*{rgname}*{ss}.npy** (3d array, [time, lat, lon], bool, mask of block or not; if not: 0/False)
-        - **SD_{eve}FlagmaskClustersEventList_Type{type_idx+1}*{rgname}*{ss}** (1d list, saving the target region’s blocking/seeding event global id)
-        - **SD_{eve}ClustersEventID_Type{type_idx+1}*{rgname}*{ss}.npy** (3d array, [time, lat, lon], int, saving the blocking/seeding event’s global id in the target positions; position with no event: -1)
-    
-    ### Blocking Identification Method Description
-    
-    1. Parameters for blocking and seeding:
-    
-    > dlat = dlon = 1
-    BlockingDuration = 5
-    SeedingDuration = 3
-    BlockingLonWidth = 15
-    SeedingLonWidth = 15
-    valueBlockingThresh = 50 # percentile
-    valueSeedingThresh = 25 # percentile
-    DX_THRESH = int(18*3)
-    MIN_DIST = 5
-    lon_thresh = 18
-    lat_thresh = 13.5
-    > 
-    1. get the connected area that over the threshold. Threshold: the 50th/25th of the longitude maximum
-    2. get the maximum LWA location of each individule cluster (each day) and it’s area and width
-        - Watershed algorithm was applied to divide big regions with multiple peak values with a longitude distance > 18*3
-    3. filter the individual clusters: a. the lon width should be larger than 15 but smaller than 120; b. should not be tropical (lat>30)
-    4. during the consecutive two days, find the pair events (with the shortest dististance, and limited to 18 degree longitude and 13.5 degree latitude)
-    5. start tracking the paired cluster day by day:
-    5.1 find the pair event at next day
-    5.2 if this event does have a pair next day, and the displacement is within 1.5*18 lons and 1.5*13.5 lats, then keep tracking
-    5.3 when there are no pair events in the next day, the track is end
-    5.4 a filter was applied on blocking events only (parameter in BKSDIdentifyFun: stationary=True): if the cluster center travels from the initial point more than lon_thresh*1.5 or lat_thresh*1.5, then interupt.
+1. **Blocking/Seeding tracking + peaking identification + diversity classifying: `S1_WatershedSeedBlocking_track_ERA5_daily_NH` and `S1_WatershedSeedBlocking_track_ERA5_daily_SH`**
+    - Method description
+        1. For each grid point, determine whether its value exceeds the threshold. The threshold is defined as: For each day and longitude, the maximum LWA over latitude is first computed, forming a sample of size N_day*N_lon. The blocking threshold is then defined as the p-th percentile of this sample (50th for blocking, 40th for seeding).
+        Then, connected clusters are identified using `cv2.connectedComponentsWithStats` with `connectivity=4`, where each contiguous group of grid cells is assigned a unique label.
+        2. Connect labels wrapping across the dateline (lon=0 and lon=360)
+        3. Watershed split. Some clusters may contain multiple local maxima, indicating that several events have been merged into a single region. To separate them, local maxima of LWA are identified within each cluster and used as markers in a marker-controlled watershed applied to −LWA, splitting the cluster into subregions, each associated with a dominant peak.
+        - `MIN_DIST`: If two maxima are closer than MIN_DIST (5 degree), they are treated as the same peak.
+        - `DX_THRESH`: Peaks within DX_THRESH longitudinal distance (18*3 degree) are grouped into the same event.
+        - `TH_ABS`: Only peaks stronger than TH_ABS are considered (No requirement here).
+        4. For each cluster, the longitudinal width and center (defined as the location of the local maximum LWA) are computed. Clusters are discarded if their latitude is below 30°, if their width is smaller than `BlockingLonWidth`/`SeedingLonWidth`, or if their longitudinal width exceeds 120°.
+        5. Pairing events between consecutive days. For each day d, we pair each detected event with at most one event on day d+1 using a nearest-neighbor matching. We first compute a distance matrix between all event centers on the two days. Event pairs are then selected iteratively from the smallest remaining distance (greedy matching). Once a pair is accepted, the corresponding row and column are removed from further consideration.
+        - `lon_thresh` = 18, `lat_thresh` = 13.5 : Maximum allowed day-to-day longitudinal and latitudinal displacement between paired events.
+        6. Event tracking across days. After establishing one-to-one event pairs between day d and d+1, we construct event tracks by following these links forward in time. For each untracked event on day d, tracking starts from its label and iteratively appends the paired event on the next day until no valid pair exists (or a stopping criterion is met). When stationary=True, we additionally require that each subsequent event remains within 1.5 times the day-to-day displacement thresholds relative to the initial event location. This filter was applied on blocking events only (parameter in BKSDIdentifyFun: stationary=True)
+        - `Duration`: minimum number of consecutive days required for a track to be retained as a blocking event. (SeedingDuration = 3; BlockingDuration = 5).
+        - `1.5*lon_thresh and 1.5*lat_thresh`: limiting drift relative to the *initial* event center
+    - Key variables:
+        
+        ```python
+        #%% Parameters ###
+        DX_THRESH = int(18*3) 
+        MIN_DIST = 5
+        TH_ABS = None
+        dlat = dlon = 1
+        BlockingDuration = 5
+        SeedingDuration = 3
+        BlockingLonWidth = 15
+        SeedingLonWidth = 10
+        valueBlockingThresh = 50  # percentile
+        valueSeedingThresh = 40    # percentile
+        ```
+        
+    - Inputs (./LGHW/): outputs from LWA calculation
+    - Outputs:
+        
+        ```python
+        save_dict = {
+            f"{dtname}_SD_{Blocking/Seeding}_peaking_date_daily_{NH/SH}": Blocking_peaking_date, # 1d-list, each element represent the date of peaking of each event, single value
+            f"{dtname}_SD_Blocking_peaking_lon_daily_NH": Blocking_peaking_lon, # 1d-list, each element represent the lon of peaking of each event, single value
+            f"{dtname}_SD_Blocking_peaking_lat_daily_NH": Blocking_peaking_lat, # 1d-list, each element represent the lat of peaking of each event, single value
+            f"{dtname}_SD_BlockingTotal_date_NH": BlockingTotal_date, # list[list], each sublist is a list of dates of each seeding/blocking event
+            f"{dtname}_SD_BlockingTotal_label_NH": BlockingTotal_label, #list[list of 2d-array], each sublist is a list of 2d bool masks of seeding/blocking locations (shape: 90,360; lat increasing)
+            f"{dtname}_SD_BlockingTypeI_NH": BlockingTypeI, # list, 1d, represent the type of each event, 1-ridge, 2-trough, 3-dipole
+            f"{dtname}_SD_Blocking_diversity_date_daily_NH": Blocking_diversity_date, # list[list of 3 types], [Ridge,Trough,Dipole]; the dates of each event
+            f"{dtname}_SD_Blocking_diversity_label_daily_NH": Blocking_diversity_label, # list[list of 3 types], [Ridge,Trough,Dipole]; each sublist is the 2d bool masks of seeding/blocking locations (shape: 90,360; lat increasing)
+            f"{dtname}_SD_Blocking_diversity_peaking_date_daily_NH": Blocking_diversity_peaking_date, # list[list of 3 types], [Ridge,Trough,Dipole]; list of the peaking dates of each event
+            f"{dtname}_SD_Blocking_diversity_peaking_lon_daily_NH": Blocking_diversity_peaking_lon, # list[list of 3 types], [Ridge,Trough,Dipole]; list of the peaking lat of each event
+            f"{dtname}_SD_Blocking_diversity_peaking_lat_daily_NH": Blocking_diversity_peaking_lat, # list[list of 3 types], [Ridge,Trough,Dipole]; list of the peaking lon of each event
+            f"{dtname}_SD_Blocking_freq_NH": B_freq
+        }
+        ```
+        
+        > and a figure output: **{dtname}_SD_blocking/seedingFreq_daily_watershed_SH/NH.png’**
+        > 
+
+1. **Blocking data organization, put into the 3D-array and plot: `S2_Blocking_transfer2array.py`**
+    - Method description
+        
+        **Regional and seasonal filtering of blocking/seeding events.**
+        
+        For each dataset, blocking (or seeding) events are classified by type (ridge, trough, and dipole) and then filtered by geographic region and season. Three target regions are defined (Atlantic, North Pacific, and South Pacific), each specified by latitude–longitude bounds; for seeding, we expand the region 30 degrees westward, to include more potential seeding events that are close to the original region boundary. This is because the seeding events can be more flexible in location, and we want to make sure we don't miss those that are just outside the original boundary but still relevant for the blocking events in the target region.
+        
+        An event is assigned to a season if any day within its lifetime falls within the target months. Spatial filtering is based on the event’s peak location (LWA maximum): events are retained only if their peak latitude and longitude lie within the specified regional bounds (accounting for periodic longitude across 0°/360°).
+        
+        For the retained events, their daily footprints are mapped onto a three-dimensional grid (time × latitude × longitude) to construct a Boolean mask indicating the presence of an event. In addition, an event-ID array is generated that records the global event index at each grid cell and time step, and a list of event indices belonging to the target region–season–type combination is saved. 
+        
+    - Inputs:
+        
+        ```python
+        with open(f"{OUT_DIR}/{dtname}_SD_{eve}_diversity_label_daily_{k}", "rb") as fp:
+            Blocking_diversity_label = pickle.load(fp)   
+        with open(f"{OUT_DIR}/{dtname}_SD_{eve}_diversity_date_daily_{k}", "rb") as fp:
+            Blocking_diversity_date = pickle.load(fp)     
+        with open(f"{OUT_DIR}/{dtname}_SD_{eve}_diversity_peaking_lon_daily_{k}", "rb") as fp:
+            peakinglonList = pickle.load(fp)
+        with open(f"{OUT_DIR}/{dtname}_SD_{eve}_diversity_peaking_lat_daily_{k}", "rb") as fp:
+            peakinglatList = pickle.load(fp)
+        ```
+        
+    - Outputs:
+        
+        ```python
+        # save the blocking array: 3d bool array, [time, lat, lon], bool, mask of block or not; if not: 0/False
+        np.save(f"{OUT_DIR}/{dtname}_SD_{eve}FlagmaskClusters_Type{type_idx+1}_{rgname}_{ss}.npy", blocking_array)
+        # save the blocking id list: 1d list, saving the target region’s blocking/seeding event global id
+        with open(f"{OUT_DIR}/{dtname}_SD_{eve}FlagmaskClustersEventList_Type{type_idx+1}_{rgname}_{ss}", "wb") as fp:
+            pickle.dump(ATLlist, fp)
+        # save the id array: 3d array, [time, lat, lon], int, saving the blocking/seeding event’s global id in the target positions; position with no event: -1
+        np.save(f"{OUT_DIR}/{dtname}_SD_{eve}ClustersEventID_Type{type_idx+1}_{rgname}_{ss}.npy", blockingID_array)
+        ```
+        
+        > also a figure output: **{dtname}*{eve}GlobalFrequency*{blkTypes[type_idx]}_{ss}.png**
+        > 
+2. Blocking number in regions, seasons, types, datasets: `S3_getBlockingStatis.py`
+- Inputs: **{OUT_DIR}/{dtname}*SD*{eve}FlagmaskClustersEventList_Type{typeid}*{rgname}*{ss}**
+- Outputs: **{dtname}_totalNumber.txt** (the number of each types of blocking/seeding events)
+
+---
 
 ## BAM (./BAM)
 
@@ -294,3 +344,17 @@ High BAM produce more seeds. Seeds encontour with eddies have higher chance to d
 > 
 1. Figure1: High BAM v.s. Low BAM situations, 1d lines (both seeds and blocking probability)
 2. Figure2: Composites of Seeds + Track points development, both under high BAM state, but one develop into blockings, another didn’t develop into blockings
+
+---
+
+## Figure Plotting (./FigurePlotting/)
+
+### Fig1 (a): fig1.ipynb
+
+### Fig1 (b-c): fig1_LWAcomposite.ipynb
+
+### Fig2: Nature_Fig2_NH_allSeedDevelop.ipynb and Nature_Fig2_SH_allSeedDevelop.ipynb
+
+### Fig3 (a-b): Nature_Fig3_SeedNumberSeries_plusBAMindex.ipynb
+
+### Fig3 (c-e): Nature_Fig3_BAMLines_3regions.ipynb

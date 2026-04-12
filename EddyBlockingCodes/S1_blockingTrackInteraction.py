@@ -27,7 +27,7 @@ import matplotlib.path as mpath
 from multiprocessing import Pool
 from itertools import product
 
-# %% 00 prepare the environment and functions
+# %% 00 prepare the environment and functions --------------------------------------------------------------
 regions = ["ATL", "NP", "SP"]
 seasons = ["ALL", "DJF", "JJA"]
 seasonsmonths = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],[12, 1, 2], [6, 7, 8]]
@@ -70,12 +70,49 @@ def findClosest(lati, latids):
         diff = np.abs(lati - latids)
         return np.argmin(diff) 
 
-def process_combination(args):
-    rgname, cyc, typeid, ss = args
+#%% dataset settings -------------------------------------------------------------
+datasets = ["ERA5", "MERRA2", "JRA55"]
 
-    tag = f"{cyc}-Type{typeid}_{rgname}_{ss}"
+OUT_DIR_List = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+}
+timerefFile = {
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
+    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+}
+latrefFile = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+}
+lonrefFile = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+}
+varnameList = {
+    "ERA5": "z",
+    "MERRA2": "H",
+    "JRA55": "var7"
+}
+yearnameList = {
+    "ERA5": "1979_2021",
+    "MERRA2": "1980_2021",
+    "JRA55": "1979_2021"
+}
+lat_name, lon_name, time_name = "lat", "lon", "time"
+
+
+def process_combination(args):
+    rgname, cyc, typeid, ss, dtname = args
+
+    OUT_DIR = OUT_DIR_List[dtname]
+    tag = f"{dtname}-{cyc}-Type{typeid}_{rgname}_{ss}"
     # check if the tag has been processed
-    cor_summary_file = "BlkPersis_EddyNumber_Cor.txt"
+    cor_summary_file = f"{dtname}_BlkPersis_EddyNumber_Cor.txt"
     if os.path.exists(cor_summary_file):
         with open(cor_summary_file, "r") as f:
             if any(tag in line for line in f):
@@ -88,53 +125,52 @@ def process_combination(args):
     # attributes for TRACKs
     
     # lat and lon for blockings
-    lat = np.load("/scratch/bell/hu1029/LGHW/LWA_lat_1979_2021_ERA5_6hr.npy")
-    lon = np.load("/scratch/bell/hu1029/LGHW/LWA_lon_1979_2021_ERA5_6hr.npy")
-    lat_mid = int(len(lat)/2) + 1 
+    lat = np.load(latrefFile[dtname])
+    lon = np.load(lonrefFile[dtname])
+    lat_mid = int(len(lat)/2) + 1
+
     if rgname == "SP":
-        Blklat = lat[lat_mid:len(lat)]
+        Blklat = lat[0:lat_mid-1] # increasing lat from -90 to 0
         k = 'SH'
     else:
-        Blklat = lat[0:lat_mid-1]
+        Blklat = lat[lat_mid:len(lat)] # increasing lat from 0 to 90
         k = 'NH'
-    Blklat = np.flip(Blklat) # make the lat increasing
     Blklon = lon
 
     # Time management
     # time for the tracks: 6-hourly
-    ds = xr.open_dataset('/scratch/bell/hu1029/Data/processed/ERA5_Z500anomaly_subtractseasonal_6hr_1979_2021.nc')
-    timesarr = np.array(ds['time'])
+    ds = xr.open_dataset(timerefFile[dtname])
+    timesarr = np.array(ds[time_name])
     datetime_array = pd.to_datetime(timesarr)
     timei = list(datetime_array)
     
     # load tracks
-    with open(f'/scratch/bell/hu1029/LGHW/{cyc}Zanom_allyearTracks_{k}.pkl', 'rb') as file:
+    with open(f'{OUT_DIR}/{dtname}_{cyc}Zanom_allyearTracks_{k}.pkl', 'rb') as file:
         track_data = pickle.load(file)
 
     print('track loaded-----------------------',flush=True)
 
     # read in blocking event lists
-    with open(f"/scratch/bell/hu1029/LGHW/SD_Blocking_diversity_date_daily_{k}", "rb") as fp:
+    with open(f"{OUT_DIR}/{dtname}_SD_Blocking_diversity_date_daily_{k}", "rb") as fp:
         Blocking_diversity_date = pickle.load(fp)
     Blocking_diversity_date = Blocking_diversity_date[typeid-1] # get the blocking event list for the typeid
 
     # the id of each blocking event (not all events! just the events within the target region)
-    with open(f'/scratch/bell/hu1029/LGHW/SD_BlockingFlagmaskClustersEventList_Type{typeid}_{rgname}_{ss}', "rb") as f:
+    with open(f'{OUT_DIR}/{dtname}_SD_BlockingFlagmaskClustersEventList_Type{typeid}_{rgname}_{ss}', "rb") as f:
         targetblockingeventID = pickle.load(f)
     print(f'blocking id of each event (10 for example): {targetblockingeventID[:10]}',flush=True)
     targetblockingeventID = np.array(targetblockingeventID)
 
     # %% 02 eddy-blocking interaction identify --------------------------------------------------------------
     # 001 transfer to 6-hourly
-    blockingSec2 = np.load(f'/scratch/bell/hu1029/LGHW/SD_BlockingClustersEventID_Type{typeid}_{rgname}_{ss}.npy') # the blocking event index array
+    blockingSec2 = np.load(f'{OUT_DIR}/{dtname}_SD_BlockingClustersEventID_Type{typeid}_{rgname}_{ss}.npy') # the blocking event index array
     # transfer to 6-hourly
-    blockingSec2 = np.flip(blockingSec2, axis=1) # flip to make the lat increasing
     BlockingEIndex = np.repeat(blockingSec2, 4, axis=0) # turn daily LWA to 6-hourly (simply repeat the daily value 4 times)
 
     # 002 blocking event characteristics: persistence
     eventPersistence = [len(Blocking_diversity_date[evid]) for evid in targetblockingeventID]
     print(f'blocking persistence of each event (10 for example): {eventPersistence[:10]}',flush=True)
-    np.save(f'/scratch/bell/hu1029/LGHW/BlockingEventPersistence_Type{typeid}_{rgname}_{ss}.npy', np.array(eventPersistence))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingEventPersistence_Type{typeid}_{rgname}_{ss}.npy', np.array(eventPersistence))
 
     # 003* define four scenarios and check --------------------------------------------------------------
     EddyNumber = [0] * len(targetblockingeventID) # a list of the eddy number that each block is related to; length = blocking event number
@@ -222,10 +258,10 @@ def process_combination(args):
         tracknum += 1
 
     # if tag already in the summary file, skip
-    if os.path.exists('Interaction_summary.txt'):
-        with open('Interaction_summary.txt', "r") as f:
+    if os.path.exists(f'{dtname}_Interaction_summary.txt'):
+        with open(f'{dtname}_Interaction_summary.txt', "r") as f:
             if not any(tag in line for line in f):
-                with open(f"Interaction_summary.txt", "a") as f:  
+                with open(f"{dtname}_Interaction_summary.txt", "a") as f:  
                     f.write(f'Blocking type{typeid} - {cyc} - {rgname} - {ss} total length: {len(eventPersistence)}\n')
                     f.write(f'Length of the Through interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(ThroughTrack)}\n')
                     f.write(f'Length of the Edge interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(EdgeTrack)}\n')
@@ -233,7 +269,7 @@ def process_combination(args):
                     f.write(f'Length of the total interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(ThroughTrack)+len(AbsorbedTrack)+len(EdgeTrack)}\n')
                     f.write('-----------------------------------------------------\n')
     else:
-        with open(f"Interaction_summary.txt", "a") as f:  
+        with open(f"{dtname}_Interaction_summary.txt", "a") as f:  
             f.write(f'Blocking type{typeid} - {cyc} - {rgname} - {ss} total length: {len(eventPersistence)}\n')
             f.write(f'Length of the Through interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(ThroughTrack)}\n')
             f.write(f'Length of the Edge interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(EdgeTrack)}\n')
@@ -242,32 +278,43 @@ def process_combination(args):
             f.write('-----------------------------------------------------\n')
 
     rr, pp = pearsonr(eventPersistence, EddyNumber)
-    if os.path.exists('BlkPersis_EddyNumber_Cor.txt'):
-        with open('BlkPersis_EddyNumber_Cor.txt', "r") as f:
+    if os.path.exists(f'{dtname}_BlkPersis_EddyNumber_Cor.txt'):
+        with open(f'{dtname}_BlkPersis_EddyNumber_Cor.txt', "r") as f:
             if not any(tag in line for line in f):
-                with open(f"BlkPersis_EddyNumber_Cor.txt", "a") as f:  
+                with open(f"{dtname}_BlkPersis_EddyNumber_Cor.txt", "a") as f:  
                     f.write(f"{cyc}-Type{typeid}_{rgname}_{ss}, Pearson r = {rr:.4f}, p-value = {pp:.4e}\n")
     else:
-        with open(f"BlkPersis_EddyNumber_Cor.txt", "a") as f:  
+        with open(f"{dtname}_BlkPersis_EddyNumber_Cor.txt", "a") as f:  
             f.write(f"{cyc}-Type{typeid}_{rgname}_{ss}, Pearson r = {rr:.4f}, p-value = {pp:.4e}\n")
 
-    np.save(f'/scratch/bell/hu1029/LGHW/BlockingType{typeid}_EventEddyNumber_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(EddyNumber))
-    np.save(f'/scratch/bell/hu1029/LGHW/TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(BlockIndex))
-    np.save(f'/scratch/bell/hu1029/LGHW/BlockingType{typeid}_ThroughTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(ThroughTrack))
-    np.save(f'/scratch/bell/hu1029/LGHW/BlockingType{typeid}_AbsorbedTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(AbsorbedTrack))
-    np.save(f'/scratch/bell/hu1029/LGHW/BlockingType{typeid}_EdgeTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(EdgeTrack))
-    np.save(f'/scratch/bell/hu1029/LGHW/BlockingType{typeid}_InterType_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(tpIndex))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_EventEddyNumber_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(EddyNumber))
+    np.save(f'{OUT_DIR}/{dtname}_TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(BlockIndex))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_ThroughTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(ThroughTrack))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_AbsorbedTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(AbsorbedTrack))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_EdgeTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(EdgeTrack))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_InterType_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(tpIndex))
 
     print(f'Blocking type{typeid}-{cyc}_{rgname}_{ss} interaction saved',flush=True)
 
-
+# parallel processing ---------------------------------------------
 # if __name__ == "__main__":
 #     param_combinations = list(product(regions, cycTypes, [1, 2, 3], seasons))
 #     with Pool(processes=64) as pool:
 #         pool.map(process_combination, param_combinations)
 
-for ss in seasons:
-    for cyc in cycTypes:
-        for rgname in regions:
-                for typeid in [1, 2, 3]:
-                    process_combination((rgname, cyc, typeid, ss))
+# serial processing ---------------------------------------------
+# for dtname in datasets:
+#     for ss in seasons:
+#         for cyc in cycTypes:
+#             for rgname in regions:
+#                     for typeid in [1, 2, 3]:
+#                         process_combination((rgname, cyc, typeid, ss, dtname))
+
+# multi-tasks processing, using multiple nodes ---------------------------------------------
+import sys
+rgname = sys.argv[1]
+cyc = sys.argv[2]
+typeid = int(sys.argv[3])
+ss = sys.argv[4]
+dtname = sys.argv[5]
+process_combination((rgname, cyc, typeid, ss, dtname))

@@ -36,6 +36,35 @@ import imageio
 from scipy import stats
 from collections import defaultdict
 
+# %% dataset settings -------------------------------------------------------------
+datasets = ["ERA5", "MERRA2", "JRA55"]
+
+OUT_DIR_List = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+}
+yearnameList = {
+    "ERA5": "1979_2021",
+    "MERRA2": "1980_2021",
+    "JRA55": "1979_2021"
+}
+timerefFile = {
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
+    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+}
+latrefFile = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+}
+lonrefFile = {
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
+    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+}
+
 # %% 00 function --------------------------------
 regions = ["ATL", "NP", "SP"]
 seasons = [ "ALL", "DJF", "JJA"]
@@ -66,103 +95,111 @@ def findClosest(lati, latids):
         diff = np.abs(lati - latids)
         return np.argmin(diff) 
 
-# ACtracks ===========================
-# tracks
-for ss in seasons:        
-    for cyc in cycTypes:
-        for typeid in [1, 2, 3]:
-            for rgname in regions:
-                
-                print(f'Start: {cyc}, type {typeid}, {rgname}, {ss}', flush=True)
+for dtname in datasets:
+    
+    print(f"Processing dataset: {dtname}", flush=True)
+    OUTDIR = OUT_DIR_List[dtname]
+    INDIR = OUTDIR
+    yearname = yearnameList[dtname]
+    latfile = latrefFile[dtname]
+    lonfile = lonrefFile[dtname]
+    timefile = timerefFile[dtname]
 
-                # check if the result file exists
-                if os.path.exists(f'/scratch/bell/hu1029/LGHW/{cyc}trackInteracting_array_Type{typeid}_{rgname}_{ss}.npy'):
-                    print(f'File already exists: {cyc}trackInteracting_array_Type{typeid}_{rgname}_{ss}.npy', flush=True)
-                    continue
+    # tracks
+    for ss in seasons:        
+        for cyc in cycTypes:
+            for typeid in [1, 2, 3]:
+                for rgname in regions:
+                    
+                    print(f'Start: {cyc}, type {typeid}, {rgname}, {ss}', flush=True)
 
-                if rgname == "SP":
-                    HMi = '_SH'
-                else:
-                    HMi = '_NH'
+                    # check if the result file exists
+                    if os.path.exists(f'{OUTDIR}/{dtname}_{cyc}trackInteracting_array_Type{typeid}_{rgname}_{ss}.npy'):
+                        print(f'File already exists: {cyc}trackInteracting_array_Type{typeid}_{rgname}_{ss}.npy', flush=True)
+                        continue
 
-                # 01 read data --------------------------------------------------------------
-                # attributes for tracks
-                ds = xr.open_dataset('/scratch/bell/hu1029/Data/processed/ERA5_Z500anomaly_subtractseasonal_6hr_1979_2021.nc')
-                timesarr = np.array(ds['time'])
-                datetime_array = pd.to_datetime(timesarr)
-                timeiarr = list(datetime_array)
-                
-                # attributes for z500 (1dg) - track points must be put into the same grid as the 1dg z500
-                lat = np.load("/scratch/bell/hu1029/LGHW/LWA_lat_1979_2021_ERA5_6hr.npy")
-                lon = np.load("/scratch/bell/hu1029/LGHW/LWA_lon_1979_2021_ERA5_6hr.npy")
-                lat_mid = int(len(lat)/2) + 1 
-                if rgname == "SP":
-                    Blklat = lat[lat_mid:len(lat)]
-                else:
-                    Blklat = lat[0:lat_mid-1]
-                Blklat = np.flip(Blklat) # make it ascending order (from south to north)
-                print(Blklat, flush=True)
-                Blklon = lon 
+                    if rgname == "SP":
+                        HMi = '_SH'
+                    else:
+                        HMi = '_NH'
 
-                timesarr = np.array(ds['time'])
-                datetime_array = pd.to_datetime(timesarr)
-                timeiarr = list(datetime_array)
+                    # 01 read data --------------------------------------------------------------
+                    # time management
+                    ds = xr.open_dataset(timefile)
+                    timesarr = np.array(ds['time'])
+                    datetime_array = pd.to_datetime(timesarr)
+                    timeiarr = list(datetime_array)
+                    
+                    # attributes for z500 (1dg) - track points must be put into the same grid as the 1dg z500
+                    lat = np.load(latfile)
+                    lon = np.load(lonfile)
+                    lat_mid = int(len(lat)/2) + 1
+                    if rgname == "SP":
+                        Blklat = lat[0:lat_mid-1]
+                    else:
+                        Blklat = lat[lat_mid:len(lat)]
+                    print(Blklat, flush=True)
+                    Blklon = lon 
 
-                # get the lat/lon range
-                lat_min, lat_max, lon_min, lon_max = Region_ERA(rgname)
-                
-                # get the interact id
-                # find if the file exists
-                if not os.path.exists(f'/scratch/bell/hu1029/LGHW/TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy'):
-                    print(f'File not found: TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy', flush=True)
-                    continue
-                InterTypeSec2CC = np.load(f'/scratch/bell/hu1029/LGHW/TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy')
-                interidCC = np.where(InterTypeSec2CC != -1)[0] # the location of the tracks that intersect with the blocking
+                    timesarr = np.array(ds['time'])
+                    datetime_array = pd.to_datetime(timesarr)
+                    timeiarr = list(datetime_array)
 
-                # AC tracks
-                with open(f'/scratch/bell/hu1029/LGHW/{cyc}Zanom_allyearTracks{HMi}.pkl', 'rb') as file:
-                    track_data = pickle.load(file)
-                track_data = [track_data[i] for i in interidCC] # get the interacting track id
+                    # get the lat/lon range
+                    lat_min, lat_max, lon_min, lon_max = Region_ERA(rgname)
+                    
+                    # get the interact id
+                    # find if the file exists
+                    if not os.path.exists(f'{INDIR}/{dtname}_TrackBlockingType{typeid}_Index_{yearname}_{rgname}_{ss}_{cyc}.npy'):
+                        print(f'File not found: TrackBlockingType{typeid}_Index_{yearname}_{rgname}_{ss}_{cyc}.npy', flush=True)
+                        continue
+                    InterTypeSec2CC = np.load(f'{INDIR}/{dtname}_TrackBlockingType{typeid}_Index_{yearname}_{rgname}_{ss}_{cyc}.npy')
+                    interidCC = np.where(InterTypeSec2CC != -1)[0] # the location of the tracks that intersect with the blocking
 
-                # extract all the point elements
-                trackid = np.array([i for i, _ in track_data])
-                trackidarr = np.repeat(trackid, [len(track) for _, track in track_data])
-                time_list = np.array([time for _, track in track_data for (time, _, _) in track])
-                y_list = np.array([y for _, track in track_data for (_, y, _) in track]) #lon
-                x_list = np.array([x for _, track in track_data for (_, _, x) in track]) #lat
+                    # AC tracks
+                    with open(f'{INDIR}/{dtname}_{cyc}Zanom_allyearTracks{HMi}.pkl', 'rb') as file:
+                        track_data = pickle.load(file)
+                    track_data = [track_data[i] for i in interidCC] # get the interacting track id
 
-                # make an array representing the trackpoint density
-                trackPoints_idarr = np.full((len(datetime_array), len(Blklat), len(Blklon)),fill_value=-1, dtype=np.int64)
-                trackPoints_array = np.zeros((len(datetime_array), len(Blklat), len(Blklon)), dtype=np.int16)
+                    # extract all the point elements
+                    trackid = np.array([i for i, _ in track_data])
+                    trackidarr = np.repeat(trackid, [len(track) for _, track in track_data])
+                    time_list = np.array([time for _, track in track_data for (time, _, _) in track])
+                    y_list = np.array([y for _, track in track_data for (_, y, _) in track]) #lon
+                    x_list = np.array([x for _, track in track_data for (_, _, x) in track]) #lat
 
-                time_indices = np.searchsorted(timeiarr, time_list)
-                lat_indices = np.array([findClosest(x, Blklat) for x in x_list])
-                lon_indices = np.array([findClosest(y, Blklon) for y in y_list])
-                print('check:',flush=True)
-                print(f'{trackidarr[:50]}', flush=True)
-                print(f'{time_indices[:50]}', flush=True)
-                print(f'{lat_indices[:50]}', flush=True)
-                print(f'{lon_indices[:50]}', flush=True)
-                # count numbers save in trackPoints_array
-                np.add.at(trackPoints_array, (time_indices, lat_indices, lon_indices), 1)
-                trackPoints_idarr[time_indices, lat_indices, lon_indices] = trackidarr
+                    # make an array representing the trackpoint density
+                    trackPoints_idarr = np.full((len(datetime_array), len(Blklat), len(Blklon)),fill_value=-1, dtype=np.int64)
+                    trackPoints_array = np.zeros((len(datetime_array), len(Blklat), len(Blklon)), dtype=np.int16)
 
-                trackPoints_array.astype(bool)
+                    time_indices = np.searchsorted(timeiarr, time_list)
+                    lat_indices = np.array([findClosest(x, Blklat) for x in x_list])
+                    lon_indices = np.array([findClosest(y, Blklon) for y in y_list])
+                    print('check:',flush=True)
+                    print(f'{trackidarr[:50]}', flush=True)
+                    print(f'{time_indices[:50]}', flush=True)
+                    print(f'{lat_indices[:50]}', flush=True)
+                    print(f'{lon_indices[:50]}', flush=True)
+                    # count numbers save in trackPoints_array
+                    np.add.at(trackPoints_array, (time_indices, lat_indices, lon_indices), 1)
+                    trackPoints_idarr[time_indices, lat_indices, lon_indices] = trackidarr
 
-                np.save(f'/scratch/bell/hu1029/LGHW/{cyc}trackInteracting_array_Type{typeid}_{rgname}_{ss}.npy', trackPoints_array)
-                np.save(f'/scratch/bell/hu1029/LGHW/{cyc}trackInteracting_idarr_Type{typeid}_{rgname}_{ss}.npy', trackPoints_idarr)
+                    trackPoints_array.astype(bool)
 
-                trackPoints_frequency = np.nansum(trackPoints_array, axis=0) 
-                # plot the map -------------------
-                fig, ax, cf = create_Map(Blklon,Blklat,trackPoints_frequency,fill=True,fig=None,leftlon=-180, rightlon=180, lowerlat=-90, upperlat=90,
-                                            minv=0, maxv=np.nanmax(trackPoints_frequency), interv=11, figsize=(12,5),
-                                            centralLon=270, colr='PuBu', extend='max',title=f'{cyc} tracks density')
-                addSegments(ax,[(lon_min,lat_min),(lon_max,lat_min),(lon_max,lat_max),(lon_min,lat_max),(lon_min,lat_min)],colr='darkred',linewidth=2)
-                plt.colorbar(cf,ax=ax,orientation='horizontal',label='Frequency (times)',fraction=0.04, pad=0.1)
+                    np.save(f'{OUTDIR}/{dtname}_{cyc}trackInteracting_array_Type{typeid}_{rgname}_{ss}.npy', trackPoints_array)
+                    np.save(f'{OUTDIR}/{dtname}_{cyc}trackInteracting_idarr_Type{typeid}_{rgname}_{ss}.npy', trackPoints_idarr)
 
-                plt.show()
-                plt.tight_layout()
-                plt.savefig(f'SD_{cyc}InteractingFrequency_Type{typeid}_{rgname}_{ss}.png')
-                plt.close()
+                    trackPoints_frequency = np.nansum(trackPoints_array, axis=0) 
+                    # plot the map -------------------
+                    fig, ax, cf = create_Map(Blklon,Blklat,trackPoints_frequency,fill=True,fig=None,leftlon=-180, rightlon=180, lowerlat=-90, upperlat=90,
+                                                minv=0, maxv=np.nanmax(trackPoints_frequency), interv=11, figsize=(12,5),
+                                                centralLon=270, colr='PuBu', extend='max',title=f'{cyc} tracks density')
+                    addSegments(ax,[(lon_min,lat_min),(lon_max,lat_min),(lon_max,lat_max),(lon_min,lat_max),(lon_min,lat_min)],colr='darkred',linewidth=2)
+                    plt.colorbar(cf,ax=ax,orientation='horizontal',label='Frequency (times)',fraction=0.04, pad=0.1)
 
-                print(f'Finished {cyc} interacting tracks density for type {typeid} in {rgname} during {ss}', flush=True)
+                    plt.show()
+                    plt.tight_layout()
+                    plt.savefig(f'{dtname}_SD_{cyc}InteractingFrequency_Type{typeid}_{rgname}_{ss}.png')
+                    plt.close()
+
+                    print(f'Finished {dtname}: {cyc} interacting tracks density for type {typeid} in {rgname} during {ss}', flush=True)

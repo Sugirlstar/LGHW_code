@@ -6,8 +6,8 @@
 #SBATCH --error=err_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=128
-#SBATCH --time=06:00:00
+#SBATCH --cpus-per-task=3
+#SBATCH --time=24:00:00
 
 module load gcc/11.1.0  
 module load openmpi/4.1.6
@@ -16,7 +16,7 @@ module load parallel
 
 OUT_DIR=/scratch/bell/hu1029/Data/raw/MERRA2/Z500
 TEMP_DIR=/scratch/bell/hu1029/Data/raw/MERRA2/ALLVars
-URL_LIST=subset_M2I6NPANA_5.12.4_20260211_192421_.txt
+URL_LIST=subset_M2I6NPANA_5.12.4_20260412_045649_.txt
 mkdir -p $TEMP_DIR
 mkdir -p $OUT_DIR
 

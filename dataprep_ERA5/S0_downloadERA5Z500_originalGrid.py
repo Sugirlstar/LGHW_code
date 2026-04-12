@@ -8,13 +8,11 @@ for yr in range(2022, 2026):
     c.retrieve(
         'reanalysis-era5-pressure-levels',
         {
-            'product_type': 'reanalysis',
-            'grid': 'F128',
-            'gaussian': 'regular',
-            'format': 'grib',
-            'pressure_level': [
-                '500',
-            ],
+            "product_type": ["reanalysis"],
+            "variable": ["geopotential"],
+            "pressure_level": ["500"],
+            "data_format": "netcdf",
+            "download_format": "unarchived",
             'year': [str(yr)],
             'month': [
                 '01', '02', '03', '04', '05', '06',
@@ -35,8 +33,7 @@ for yr in range(2022, 2026):
             ],
             'time': [
                 '00:00', '06:00', '12:00', '18:00',
-            ],
-            'variable': 'geopotential',
+            ]
         },
-        f'/scratch/bell/hu1029/Data/raw/ERA5_Z500_F128/ERA5_Z500_6hr_{yr}.grb')
+        f'/scratch/bell/hu1029/Data/raw/ERA5_Z500_originalGrid/ERA5_Z500_6hr_{yr}.nc')
     print(f'Done downloading ERA5 Z500 for {yr} -------------------')
