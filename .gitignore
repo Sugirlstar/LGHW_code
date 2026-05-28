@@ -2,6 +2,7 @@
 !*.py
 !*.sh
 !*.md
+!*.ipynb
 !.gitignore
 !*/
 **/drafts/
