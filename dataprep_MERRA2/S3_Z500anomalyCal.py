@@ -26,13 +26,15 @@ from matplotlib.patches import Polygon
 import matplotlib.path as mpath
 from matplotlib.lines import Line2D
 
+STyear = 1980
+EDyear = 2025
 datares = ['1dg', 'F128']
-datarespath = {'1dg': '/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc',
-               'F128': '/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_F128.nc'}
+datarespath = {'1dg': f'/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_{STyear}_{EDyear}_1dg.nc',
+               'F128': f'/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_{STyear}_{EDyear}_F128.nc'}
 varnameList = {'1dg': 'H',
            'F128': 'H'}
 
-for resi in  ['1dg', 'F128']:
+for resi in  ['F128', '1dg']:
 
     print(f'Processing resolution: {resi} -----------------',flush=True)
     filepath = datarespath[resi]
@@ -69,12 +71,12 @@ for resi in  ['1dg', 'F128']:
     ds[zname] = Z_anomaly_corrected
     ds = ds.drop_vars('month')
     # write to the nc file
-    ds.to_netcdf(f'/scratch/bell/hu1029/Data/processed/MERRA2_Z500anomaly_subtractseasonal_6hr_1980_2021_{resi}.nc')
+    ds.to_netcdf(f'/scratch/bell/hu1029/Data/processed/MERRA2_Z500anomaly_subtractseasonal_6hr_{STyear}_{EDyear}_{resi}.nc')
     print('Calculated')
     # save the climatology into netCDF file
     ds2 = ds.copy()
     ds2[zname] = climatology
-    ds2.to_netcdf(f'/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_1980_2021_{resi}.nc')
+    ds2.to_netcdf(f'/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_{STyear}_{EDyear}_{resi}.nc')
     print('climatology saved to netCDF file -----------------',flush=True)
 
     # 04 plot anomaly
@@ -98,7 +100,7 @@ for resi in  ['1dg', 'F128']:
     plt.colorbar(cf,ax=axes,orientation='horizontal',label='Z500 anomaly (m)',fraction=0.04, pad=0.1)
 
     plt.show()
-    plt.savefig(f'MERRA2_ZanomClim12Months_{resi}.png')
+    plt.savefig(f'MERRA2_ZanomClim12Months_{resi}_{STyear}_{EDyear}.png')
 
     # delete the data and release memory
     del ds, z500, zonal_mean, zonal_mean_expanded, Z_anomaly, Z_anomaly_month, Z_anomaly_month_smoothed, climatology, Zclimatology, Z_anomaly_corrected, ds2, climatologyarr, lat, lon

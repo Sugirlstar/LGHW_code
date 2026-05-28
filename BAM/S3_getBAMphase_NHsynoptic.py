@@ -51,12 +51,12 @@ for dtname in datasets:
     feb_29_ind = Date0[(Month == 2) & (Day == 29)].index
     print(feb_29_ind, flush=True)
 
-    for k in ['SH']:
+    for k in ['NH']:
         
         print(f'Processing {k} ...', flush=True)
 
         # read the BAM index
-        BI = np.load(f'{INDIR}/{dtname}_{k}_BAM_index_total_no_leap.npy')                             ### This is full BAM index from 1979 to 2025,  no leap years ###
+        BI = np.load(f'{INDIR}/synoptic_{dtname}_{k}_BAM_index_total_no_leap.npy')                             ### This is full BAM index from 1979 to 2025,  no leap years ###
         print('BI shape before (No 0229):', len(BI), flush=True)
         print(BI.shape, flush=True)
 
@@ -120,11 +120,11 @@ for dtname in datasets:
             BAM_event_low_BI_all.append(BI[idx-12])
         
         # save the BAM event peak and low day as list
-        with open(f'{INDIR}/{dtname}_{k}_BAM_event_peak_list.pkl', 'wb') as f:
+        with open(f'{INDIR}/synoptic_{dtname}_{k}_BAM_event_peak_list.pkl', 'wb') as f:
             pickle.dump(BAM_event_all, f)
-        with open(f'{INDIR}/{dtname}_{k}_BAM_event_low_list.pkl', 'wb') as f:
+        with open(f'{INDIR}/synoptic_{dtname}_{k}_BAM_event_low_list.pkl', 'wb') as f:
             pickle.dump(BAM_event_low_all, f)
         # save the BAM index with full time (with leap years)
-        np.save(f'{INDIR}/{dtname}_{k}_BAM_index_total_with_leap.npy', BI)   ### This is full BAM index from 1979 to 2025,  with leap years ###
+        np.save(f'{INDIR}/synoptic_{dtname}_{k}_BAM_index_total_with_leap.npy', BI)   ### This is full BAM index from 1979 to 2025,  with leap years ###
         print(f'{dtname}: Saved {k} BAM index with leap years and event lists.', flush=True)
     

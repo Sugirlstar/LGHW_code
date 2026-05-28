@@ -33,32 +33,32 @@ import sys
 sys.stdout.reconfigure(line_buffering=True) # print at once in slurm
 
 # %% dataset settings -------------------------------------------------------------
-datasets = ["ERA5", "MERRA2", "JRA55"]
+datasets = ["ERA5", "MERRA2", "JRA3Q"]
 
 OUT_DIR_List = {
     "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
     "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q"
 }
 yearnameList = {
-    "ERA5": "1979_2021",
-    "MERRA2": "1980_2021",
-    "JRA55": "1979_2021"
+    "ERA5": "1979_2025",
+    "MERRA2": "1980_2025",
+    "JRA3Q": "1979_2025"
 }
 timerefFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2025_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2025_1dg.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_1979_2025_1dg.nc"
 }
 latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lat_1979_2025_6hr.npy"
 }
 lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lon_1979_2025_6hr.npy"
 }
 
 # %% 00 function preparation --------------------------------
@@ -186,7 +186,7 @@ for dtname in datasets:
                 plt.xlabel('LWA')
                 plt.ylabel('Density')
                 plt.show()
-                plt.savefig(f'{dtname}_BlockEventLWAPDF_Type{typeid}_{rgname}_{ss}.png')
+                plt.savefig(f'./checkPlots/{dtname}_BlockEventLWAPDF_Type{typeid}_{rgname}_{ss}.png')
 
                 print(f'Finished processing {dtname} {rgname} {ss} Type{typeid}', flush=True)
 

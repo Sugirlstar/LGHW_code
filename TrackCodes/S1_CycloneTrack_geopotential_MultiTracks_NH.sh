@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH -A ccrc
 #SBATCH --partition=cpu
-#SBATCH --job-name=multiprocess_TRACK_JRA55
-#SBATCH --output=multiprocess_JRA55_%j.out
-#SBATCH --error=multiprocess_JRA55_%j.err
+#SBATCH --job-name=multiprocess_TRACK_JRA3Q
+#SBATCH --output=multiprocess_JRA3Q_%j.out
+#SBATCH --error=multiprocess_JRA3Q_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=50
 #SBATCH --cpus-per-task=1
-#SBATCH --time=01:00:00
+#SBATCH --time=00:20:00
 
 module load parallel
 module load netcdf-c/4.9.2
@@ -18,7 +18,7 @@ export PATH="${PATH}:."
 chmod +x ./master bin/track.linux
 chmod +x ./config.RUN
 
-DATA="/scratch/bell/hu1029/LGHW/TRACK/JRA55_TRACK_inputdata_geopotentialAnomaly_yearly"
+DATA="/scratch/bell/hu1029/LGHW/TRACK/JRA3Q_TRACK_inputdata_geopotentialAnomaly_yearly"
 TRACKS="${DATA}/TRACKS"
 if [ ! -d "$TRACKS" ]; then
   mkdir "$TRACKS"
@@ -33,7 +33,7 @@ done
 
 echo ${files[@]} | tr ' ' '\n' | parallel -j 50 --env TRACKS "
   ZFILE={};
-  TRACKS=/scratch/bell/hu1029/LGHW/TRACK/JRA55_TRACK_inputdata_geopotentialAnomaly_yearly/TRACKS;
+  TRACKS=/scratch/bell/hu1029/LGHW/TRACK/JRA3Q_TRACK_inputdata_geopotentialAnomaly_yearly/TRACKS;
   STUB=\$(echo \$ZFILE | sed -e 's/\.nc//');
   FILT42=\${STUB}_zfilt_T42.dat;
   EXT=\$STUB;
@@ -43,3 +43,4 @@ echo ${files[@]} | tr ' ' '\n' | parallel -j 50 --env TRACKS "
   master -c=\${STUB}_zonefilt_T42 -e=track.linux -d=now -i=\$FILT42 -f=\$EXT -j=RUN_AT.in -k=initial.T42_NH -n=1,62,24 -o=\$TRACKS -r=RUN_AT_ -s=RUNDATIN.6hr_Z_T42
 "
 
+echo '------------------------ [DONE] ------------------------'

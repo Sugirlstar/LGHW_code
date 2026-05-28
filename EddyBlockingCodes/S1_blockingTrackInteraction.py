@@ -71,37 +71,37 @@ def findClosest(lati, latids):
         return np.argmin(diff) 
 
 #%% dataset settings -------------------------------------------------------------
-datasets = ["ERA5", "MERRA2", "JRA55"]
+datasets = ["ERA5", "MERRA2", "JRA3Q"]
 
 OUT_DIR_List = {
     "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
     "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q"
 }
 timerefFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2025_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2025_1dg.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_1979_2025_1dg.nc"
 }
 latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lat_1979_2025_6hr.npy"
 }
 lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lon_1979_2025_6hr.npy"
 }
 varnameList = {
     "ERA5": "z",
     "MERRA2": "H",
-    "JRA55": "var7"
+    "JRA3Q": "hgt-pres-an-ll125"
 }
 yearnameList = {
-    "ERA5": "1979_2021",
-    "MERRA2": "1980_2021",
-    "JRA55": "1979_2021"
+    "ERA5": "1979_2025",
+    "MERRA2": "1980_2025",
+    "JRA3Q": "1979_2025"
 }
 lat_name, lon_name, time_name = "lat", "lon", "time"
 
@@ -110,6 +110,7 @@ def process_combination(args):
     rgname, cyc, typeid, ss, dtname = args
 
     OUT_DIR = OUT_DIR_List[dtname]
+    yearname = yearnameList[dtname]
     tag = f"{dtname}-{cyc}-Type{typeid}_{rgname}_{ss}"
     # check if the tag has been processed
     cor_summary_file = f"{dtname}_BlkPersis_EddyNumber_Cor.txt"
@@ -258,7 +259,7 @@ def process_combination(args):
         tracknum += 1
 
     # if tag already in the summary file, skip
-    if os.path.exists(f'{dtname}_Interaction_summary.txt'):
+    if os.path.exists(f'./checkPlots/{dtname}_Interaction_summary.txt'):
         with open(f'{dtname}_Interaction_summary.txt', "r") as f:
             if not any(tag in line for line in f):
                 with open(f"{dtname}_Interaction_summary.txt", "a") as f:  
@@ -269,7 +270,7 @@ def process_combination(args):
                     f.write(f'Length of the total interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(ThroughTrack)+len(AbsorbedTrack)+len(EdgeTrack)}\n')
                     f.write('-----------------------------------------------------\n')
     else:
-        with open(f"{dtname}_Interaction_summary.txt", "a") as f:  
+        with open(f"./checkPlots/{dtname}_Interaction_summary.txt", "a") as f:  
             f.write(f'Blocking type{typeid} - {cyc} - {rgname} - {ss} total length: {len(eventPersistence)}\n')
             f.write(f'Length of the Through interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(ThroughTrack)}\n')
             f.write(f'Length of the Edge interaction, {cyc}-Type{typeid}_{rgname}_{ss}: {len(EdgeTrack)}\n')
@@ -278,21 +279,21 @@ def process_combination(args):
             f.write('-----------------------------------------------------\n')
 
     rr, pp = pearsonr(eventPersistence, EddyNumber)
-    if os.path.exists(f'{dtname}_BlkPersis_EddyNumber_Cor.txt'):
-        with open(f'{dtname}_BlkPersis_EddyNumber_Cor.txt', "r") as f:
+    if os.path.exists(f'./checkPlots/{dtname}_BlkPersis_EddyNumber_Cor.txt'):
+        with open(f'./checkPlots/{dtname}_BlkPersis_EddyNumber_Cor.txt', "r") as f:
             if not any(tag in line for line in f):
-                with open(f"{dtname}_BlkPersis_EddyNumber_Cor.txt", "a") as f:  
+                with open(f"./checkPlots/{dtname}_BlkPersis_EddyNumber_Cor.txt", "a") as f:  
                     f.write(f"{cyc}-Type{typeid}_{rgname}_{ss}, Pearson r = {rr:.4f}, p-value = {pp:.4e}\n")
     else:
-        with open(f"{dtname}_BlkPersis_EddyNumber_Cor.txt", "a") as f:  
+        with open(f"./checkPlots/{dtname}_BlkPersis_EddyNumber_Cor.txt", "a") as f:  
             f.write(f"{cyc}-Type{typeid}_{rgname}_{ss}, Pearson r = {rr:.4f}, p-value = {pp:.4e}\n")
 
-    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_EventEddyNumber_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(EddyNumber))
-    np.save(f'{OUT_DIR}/{dtname}_TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(BlockIndex))
-    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_ThroughTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(ThroughTrack))
-    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_AbsorbedTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(AbsorbedTrack))
-    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_EdgeTrack_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(EdgeTrack))
-    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_InterType_1979_2021_{rgname}_{ss}_{cyc}.npy', np.array(tpIndex))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_EventEddyNumber_{yearname}_{rgname}_{ss}_{cyc}.npy', np.array(EddyNumber))
+    np.save(f'{OUT_DIR}/{dtname}_TrackBlockingType{typeid}_Index_{yearname}_{rgname}_{ss}_{cyc}.npy', np.array(BlockIndex))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_ThroughTrack_{yearname}_{rgname}_{ss}_{cyc}.npy', np.array(ThroughTrack))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_AbsorbedTrack_{yearname}_{rgname}_{ss}_{cyc}.npy', np.array(AbsorbedTrack))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_EdgeTrack_{yearname}_{rgname}_{ss}_{cyc}.npy', np.array(EdgeTrack))
+    np.save(f'{OUT_DIR}/{dtname}_BlockingType{typeid}_InterType_{yearname}_{rgname}_{ss}_{cyc}.npy', np.array(tpIndex))
 
     print(f'Blocking type{typeid}-{cyc}_{rgname}_{ss} interaction saved',flush=True)
 

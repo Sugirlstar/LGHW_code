@@ -48,7 +48,7 @@ yearnameList = {
     "JRA3Q": "1979_2025"
 }
 
-for dtname in datasets:
+for dtname in ["MERRA2", "JRA3Q"]:
 
     print(f"Processing dataset: {dtname}", flush=True)
     IN_DIR = IN_DIR_List[dtname]
@@ -69,13 +69,13 @@ for dtname in datasets:
     Year = Date['date'].dt.year
     Day = Date['date'].dt.day
 
-    for kk in ['NH', 'SH']:
+    for kk in ['NH']:
 
         #%% Step 1: Read the pre-calculated EKE data 
         # get the directory of each nc data ###
-        files = glob.glob(rf"{IN_DIR}/{dtname}_{kk}*.nc")
-        print(files, flush=True)
+        files = glob.glob(rf"{IN_DIR}/synopticEKE_{dtname}_{kk}_TROP_*.nc")
         files.sort()
+        print(files, flush=True)
         N = len(files)   #The number of u nc files
 
         ### read any data file to read some basic variables like lon and lat ###
@@ -106,7 +106,7 @@ for dtname in datasets:
 
         #%%Step 2:  Calculate or read the zonal-mean EKE (20-70N, 1000hPa-200hPa) ###
         # check if the zonal mean EKE data exists
-        if not os.path.exists(f'{OUT_DIR}/{dtname}_EKE_ZM_{kk}_total_{yearname}_1dg.npy'):
+        if not os.path.exists(f'{OUT_DIR}/{dtname}_synopticEKE_ZM_{kk}_total_{yearname}_1dg.npy'):
             print('Calculating the zonal mean EKE ------------------------------', flush=True)
             EKE = np.zeros((nday,nlev,nlat))
 
@@ -125,14 +125,14 @@ for dtname in datasets:
 
                 print(f"Processed file {year + 1}/{N}: {file}", flush=True)
 
-            np.save(f'{OUT_DIR}/{dtname}_EKE_ZM_{kk}_total_{yearname}_1dg.npy',EKE)
+            np.save(f'{OUT_DIR}/{dtname}_synopticEKE_ZM_{kk}_total_{yearname}_1dg.npy',EKE)
         else:
-            EKE = np.load(f'{OUT_DIR}/{dtname}_EKE_ZM_{kk}_total_{yearname}_1dg.npy')
+            EKE = np.load(f'{OUT_DIR}/{dtname}_synopticEKE_ZM_{kk}_total_{yearname}_1dg.npy')
 
         # Check if any Inf exists
         print("EKE shape:", EKE.shape, flush=True)
         has_nan = np.isnan(EKE).any()
-        print("Does EKE contain Inf?", has_nan, flush=True)
+        print("Does EKE contain NaN?", has_nan, flush=True)
 
         # %% Step3: Calculate the BAM index following TB14 --------------------------
         n_season = nyear # total years
@@ -183,7 +183,7 @@ for dtname in datasets:
         ax = fig.add_subplot(1,1,1)
         plt.plot(np.arange(365),EKE_day_clim_new[:,10,0])  
         plt.show()
-        plt.savefig(f'{dtname}_{kk}_EKE_day_clim_new.png')
+        plt.savefig(f'synoptic_{dtname}_{kk}_EKE_day_clim_new.png')
         plt.close()
 
         ### Climatology ---------
@@ -214,7 +214,7 @@ for dtname in datasets:
         plt.ylabel('pressure level',fontsize=12)
         plt.title("Zonal Mean EKE Climatology", pad=20)
         plt.show()
-        plt.savefig(f'{dtname}_{kk}_Zonal_Mean_EKE_Climatology.png')
+        plt.savefig(f'synoptic_{dtname}_{kk}_Zonal_Mean_EKE_Climatology.png')
         plt.close()
 
 
@@ -230,11 +230,8 @@ for dtname in datasets:
         # Create an EOF solver to do the EOF analysis. Square-root of cosine of
         # latitude and mass (level) weights are applied before the computation of EOFs.
         coslat = np.cos(np.deg2rad(lat)).clip(0., 1.) #clip limits the arary to a range
-        lev_diff = np.zeros(nlev)
-        for k in np.arange(nlev):
-            lev_diff[k] = lev0[k] - lev0[k+1]
-        #lev_diff = lev_diff
-        wgts = np.sqrt(coslat)[np.newaxis,:] * lev_diff[:,np.newaxis]
+        lev_diff = np.abs(np.gradient(lev))
+        wgts = np.sqrt(coslat)[np.newaxis,:] * np.sqrt(lev_diff[:,np.newaxis])
 
         solver = Eof(EKE_anom, weights = wgts)
         # Retrieve the leading EOF, expressed as the covariance between the leading PC
@@ -242,7 +239,7 @@ for dtname in datasets:
         eof = solver.eofsAsCovariance(neofs=1)
         pc1 = solver.pcs(npcs=1, pcscaling=1)
         var = solver.varianceFraction()
-        np.save(f'{OUT_DIR}/{dtname}_{kk}_BAM_index_total_no_leap.npy',pc1)
+        np.save(f'{OUT_DIR}/synoptic_{dtname}_{kk}_BAM_index_total_no_leap.npy',pc1)
         print('BAMindex shape:', pc1.shape, flush=True)
 
         ### Plot the EOF pattern ###
@@ -267,7 +264,7 @@ for dtname in datasets:
         plt.ylabel('pressure level',fontsize=12)
         plt.title("Leading mode of the zonal-mean EKE", pad=10)
         plt.show()
-        plt.savefig(f'{dtname}_{kk}_LeadingMode_zonalmeanEKE.png')
+        plt.savefig(f'synoptic_{dtname}_{kk}_LeadingMode_zonalmeanEKE.png')
         plt.close()
 
         #%% Step5: Power spectral analysis of the leading PC --------------------------
@@ -319,20 +316,14 @@ for dtname in datasets:
 
         plt.plot(frq1, S_m, '-k', linewidth=2)
         plt.title("PC1 power spectral", pad=10)
-        plt.xlabel('Frequency (day⁻¹)',fontsize=12)
+        plt.xlabel('Frequency',fontsize=12)
         plt.ylabel('Power',fontsize=12)
         plt.xticks([0.04,0.1,0.15,0.2,0.25])
         ax.set_xlim(0.01,0.25)
         ax.set_ylim(0,3)
-        # plt.vlines(0.04,0,3,colors='r',linestyles='solid', linewidth=1)
-        # find the max value
-        imax = np.argmax(S_m)
-        f_peak = frq1[imax]
-        S_peak = S_m[imax]
-        # plt.vlines(f_peak, 0, ax.get_ylim()[1], colors='r', linestyles='solid', linewidth=1)
-        # plt.text(f_peak+0.01, S_peak, f'{f_peak:.2f}', color='r', ha='left', va='bottom')
+        plt.vlines(0.04,0,3,colors='r',linestyles='solid', linewidth=1)
         plt.show()
-        plt.savefig(f'{dtname}_{kk}_PC1powerSpectral.png')
+        plt.savefig(f'synoptic_{dtname}_{kk}_PC1powerSpectral.png')
         plt.close()
 
         ### plot the PC curve itself ###
@@ -350,7 +341,7 @@ for dtname in datasets:
         plt.xticks([0,29,59,89])
         ax.set_xticklabels([1,30,60,90])
         plt.show()
-        plt.savefig(f'{dtname}_{kk}_PC1_DJF.png')
+        plt.savefig(f'synoptic_{dtname}_{kk}_PC1_DJF.png')
         plt.close()
 
 

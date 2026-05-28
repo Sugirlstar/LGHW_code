@@ -52,28 +52,28 @@ def findClosest(lati, latids):
         return np.argmin(diff) 
 
 #%% dataset settings -------------------------------------------------------------
-datasets = ["MERRA2", "JRA55", "ERA5"]
+datasets = ["JRA3Q", "ERA5", "MERRA2"]
 
 OUT_DIR_List = {
     "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
     "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q"
 }
 timerefFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2025_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2025_1dg.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_1979_2025_1dg.nc"
 }
 
 F128refFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500climatology_monthly_1979_2021_F128.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_1980_2021_F128.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500climatology_monthly_1979_2021_F128.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500climatology_monthly_1979_2025_F128.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_1980_2025_F128.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500climatology_monthly_1979_2025_F128.nc"
 }
 Dg1refFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500climatology_monthly_1979_2021_1dg.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_1980_2021_1dg.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500climatology_monthly_1979_2021_1dg.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500climatology_monthly_1979_2025_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_1980_2025_1dg.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500climatology_monthly_1979_2025_1dg.nc"
 }
 
 #%% read tracks and get the track density arrs --------------------------------
@@ -189,7 +189,7 @@ for i in range(len(datasets)):
             else:
                 lowlat = -90; highlat = -20
             fig, ax, cf = create_Map(lonF128,lat128_k,trackPoints_frequency,fill=True,fig=None,
-                                        minv=0, maxv=np.nanmax(trackPoints_frequency), interv=12, figsize=(12,5),
+                                        minv=0, maxv=np.nanmax(trackPoints_frequency), interv=11, figsize=(12,5),
                                         lowerlat=lowlat, upperlat=highlat,
                                         centralLon=0, colr='PuBu', extend='max',title=f'{trackType} tracks density')
 
@@ -203,7 +203,7 @@ for i in range(len(datasets)):
             trackPoints_frequency_1dg = np.nansum(trackPoints_array_1dg_k, axis=0)
             # plot the map 1dg -------------------
             fig, ax, cf = create_Map(lon1dg,lat1dg_k,trackPoints_frequency_1dg,fill=True,fig=None,
-                                        minv=0, maxv=np.nanmax(trackPoints_frequency_1dg), interv=12, figsize=(12,5),
+                                        minv=0, maxv=np.nanmax(trackPoints_frequency_1dg), interv=11, figsize=(12,5),
                                         lowerlat=lowlat, upperlat=highlat,
                                         centralLon=0, colr='PuBu', extend='max',title=f'{trackType} tracks density')
 

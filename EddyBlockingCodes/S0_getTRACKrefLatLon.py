@@ -37,22 +37,22 @@ from scipy.stats import pearsonr
 
 
 # %% dataset settings -------------------------------------------------------------
-datasets = ["ERA5", "MERRA2", "JRA55"]
+datasets = ["ERA5", "MERRA2", "JRA3Q"]
 
 TRACK_latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_TRACK_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_TRACK_lat_1979_2025_6hr.npy"
 }
 TRACK_lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_TRACK_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_TRACK_lon_1979_2025_6hr.npy"
 }
 trackrefFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500climatology_monthly_1979_2021_F128.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_1980_2021_F128.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500climatology_monthly_1979_2021_F128.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500climatology_monthly_1979_2025_F128.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500climatology_monthly_1980_2025_F128.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500climatology_monthly_1979_2025_F128.nc"
 }
 
 

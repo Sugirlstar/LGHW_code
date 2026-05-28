@@ -32,32 +32,32 @@ import seaborn as sns
 import sys
 
 # %% dataset settings -------------------------------------------------------------
-datasets = ["ERA5"]
+datasets = ["ERA5", "MERRA2", "JRA3Q"]
 
 OUT_DIR_List = {
     "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
     "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q"
 }
 yearnameList = {
-    "ERA5": "1979_2021",
-    "MERRA2": "1980_2021",
-    "JRA55": "1979_2021"
+    "ERA5": "1979_2025",
+    "MERRA2": "1980_2025",
+    "JRA3Q": "1979_2025"
 }
 timerefFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2025_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2025_1dg.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_1979_2025_1dg.nc"
 }
 latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lat_1979_2025_6hr.npy"
 }
 lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lon_1979_2025_6hr.npy"
 }
 
 # %% 00 function preparation --------------------------------
@@ -65,7 +65,7 @@ regions = ["ATL", "NP", "SP"]
 seasons = ["ALL", "DJF", "JJA"]
 seasonsmonths = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [12, 1, 2], [6, 7, 8]]
 blkTypes = ["Ridge", "Trough", "Dipole"]
-cycTypes = ["AC"]
+cycTypes = ["AC","CC"]
 HMs = ["_NH","_SH"]
 
 def Region_ERA(regionname): 
@@ -175,7 +175,7 @@ for dtname in datasets:
 
             LWAtrack = getTrackLWA(track_data, latLWA, lonLWA, LWA_td, timei)
 
-            with open(f'{OUTDIR}/{dtname}_{cyc}TrackLWA_1979_2021{HMi}.pkl', 'wb') as file:
+            with open(f'{OUTDIR}/{dtname}_{cyc}TrackLWA_{yearname}{HMi}.pkl', 'wb') as file:
                 pickle.dump(LWAtrack, file)
 
             # plot the pdf of CC and AC LWA
@@ -187,7 +187,7 @@ for dtname in datasets:
             plt.xlabel('TRACK LWA')
             plt.ylabel('Density')
             plt.show()
-            plt.savefig(f'{dtname}_Alltracks_{cyc}tracksLWA_PDF{HMi}.png')
+            plt.savefig(f'./checkPlots/{dtname}_Alltracks_{cyc}tracksLWA_PDF{HMi}.png')
             
             print(f'Finished {dtname}: {cyc} tracks LWA for {HMi}', flush=True)
 

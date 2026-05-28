@@ -22,7 +22,7 @@ TMP_DIR=/scratch/bell/hu1029/tmp_merra2
 mkdir -p "$OUT_DIR"
 
 # years
-years=$(seq 1980 2021)
+years=$(seq 2022 2025)
 
 for y in $years; do
 

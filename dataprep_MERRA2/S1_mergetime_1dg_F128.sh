@@ -21,11 +21,11 @@ mkdir -p $OUT_temp
 
 # 01: merge all the files into one file and regrid
 cdo -b F32 mergetime $RAW_DIR/MERRA2_*.nc $OUT_temp/MERRA2_Z500.nc
-# select only 1980-2021
-cdo seldate,1980-01-01,2021-12-31 $OUT_temp/MERRA2_Z500.nc $OUT_temp/MERRA2_Z500_6hourly_1980_2021.nc
+# select only 1980-2025
+cdo seldate,1980-01-01,2025-12-31 $OUT_temp/MERRA2_Z500.nc $OUT_temp/MERRA2_Z500_6hourly_1980_2025.nc
 # regrid to 1dg and F128
-cdo -b F32 remapbil,r360x181 $OUT_temp/MERRA2_Z500_6hourly_1980_2021.nc $OUT_DIR/MERRA2_Z500_6hr_1980_2021_1dg.nc
-cdo -b F32 invertlat -remapbil,n128 $OUT_temp/MERRA2_Z500_6hourly_1980_2021.nc $OUT_DIR/MERRA2_Z500_6hr_1980_2021_F128.nc
+cdo -b F32 remapbil,r360x181 $OUT_temp/MERRA2_Z500_6hourly_1980_2025.nc $OUT_DIR/MERRA2_Z500_6hr_1980_2025_1dg.nc
+cdo -b F32 invertlat -remapbil,n128 $OUT_temp/MERRA2_Z500_6hourly_1980_2025.nc $OUT_DIR/MERRA2_Z500_6hr_1980_2025_F128.nc
 
 rm -rf $OUT_temp
 

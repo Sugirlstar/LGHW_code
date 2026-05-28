@@ -18,16 +18,16 @@ module load cdo
 # 2. flip latitudes from -90~90 to 90~-90
 # 3. make it geopotential (units: m^2/s^2) instead of geopotential height (units: m)
 
-INPUT_File=/scratch/bell/hu1029/Data/processed/MERRA2_Z500anomaly_subtractseasonal_6hr_1980_2025_F128.nc
-OUTPUT_DIR=/scratch/bell/hu1029/LGHW/TRACK/MERRA2_TRACK_inputdata_geopotentialAnomaly_yearly
+INPUT_File=/scratch/bell/hu1029/Data/processed/JRA3Q_Z500anomaly_subtractseasonal_6hr_1979_2025_F128.nc
+OUTPUT_DIR=/scratch/bell/hu1029/LGHW/TRACK/JRA3Q_TRACK_inputdata_geopotentialAnomaly_yearly
 
 
 echo "Step 2: split yearly"
 
-for year in $(seq 1980 2025); do
+for year in $(seq 1979 2025); do
     echo "Processing $year"
 
-    OUTFILE=${OUTPUT_DIR}/MERRA2_geopotentialAnomaly_6hr_${year}.nc
+    OUTFILE=${OUTPUT_DIR}/JRA3Q_geopotentialAnomaly_6hr_${year}.nc
 
     cdo -O invertlat -mulc,9.80665 -selyear,$year "$INPUT_File" "$OUTFILE"
 done

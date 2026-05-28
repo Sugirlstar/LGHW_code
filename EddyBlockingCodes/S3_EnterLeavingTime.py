@@ -36,42 +36,42 @@ from collections import defaultdict
 from scipy.stats import pearsonr
 
 # %% dataset settings -------------------------------------------------------------
-datasets = ["ERA5"]
+datasets = ["ERA5", "MERRA2", "JRA3Q"]
 
 OUT_DIR_List = {
     "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
     "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q"
 }
 yearnameList = {
-    "ERA5": "1979_2021",
-    "MERRA2": "1980_2021",
-    "JRA55": "1979_2021"
+    "ERA5": "1979_2025",
+    "MERRA2": "1980_2025",
+    "JRA3Q": "1979_2025"
 }
 timerefFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2025_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2025_1dg.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_1979_2025_1dg.nc"
 }
 latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lat_1979_2025_6hr.npy"
 }
 lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lon_1979_2025_6hr.npy"
 }
 TRACK_latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_TRACK_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_TRACK_lat_1979_2025_6hr.npy"
 }
 TRACK_lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_TRACK_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_TRACK_lon_1979_2025_6hr.npy"
 }
 
 # %% 00 prepare the environment and functions
@@ -180,7 +180,7 @@ for dtname in datasets:
                     lat_min, lat_max, lon_min, lon_max = Region_ERA(rgname) # get the region range
 
                     # get the blocking index each track contribute to (-1 or the blocking global index), 1d, same length as the track_data
-                    InteractingBlockID = np.load(f'{OUTDIR}/{dtname}_TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy')        
+                    InteractingBlockID = np.load(f'{OUTDIR}/{dtname}_TrackBlockingType{typeid}_Index_{yearname}_{rgname}_{ss}_{cyc}.npy')        
                     # get the blocking event index list (global index), 1d list, all blocking events in the target region
                     with open(f'{OUTDIR}/{dtname}_SD_BlockingFlagmaskClustersEventList_Type{typeid}_{rgname}_{ss}', "rb") as f:
                         Sec2BlockEvent = pickle.load(f)
@@ -316,7 +316,7 @@ for dtname in datasets:
                     ax1.set_ylabel('Frequency')
                     ax1.set_title(f'Eddy-Blocking Interaction Number: {len(intopercentList)}')
                     ax1.set_xlim(0, 1)
-                    plt.savefig(f'./{dtname}_SD_enterleave/{dtname}_EnterTimePDF_type{typeid}_{cyc}_{rgname}_{ss}.png')
+                    plt.savefig(f'./checkPlots/{dtname}_SD_enterleave/{dtname}_EnterTimePDF_type{typeid}_{cyc}_{rgname}_{ss}.png')
                     plt.close()
 
 
@@ -332,7 +332,7 @@ for dtname in datasets:
                 print(f'{typeid}_{cyc}_{rgname}_{ss}, intopercent<=20% percentage: {len(np.where(intopercentList<=0.2)[0])/len(intopercentList)}', flush=True)
                 print(f'{typeid}_{cyc}_{rgname}_{ss}, duration<=2 percentage: {len(np.where(interactingduration<=2)[0])/len(interactingduration)}', flush=True)
 
-                with open(f"{dtname}_EnterStay_Statistic.txt", "a") as f:
+                with open(f"./checkPlots/{dtname}_EnterStay_Statistic.txt", "a") as f:
                     f.write(f'{typeid}_{cyc}_{rgname}_{ss}, intopercent<=20% percentage: {len(np.where(intopercentList<=0.2)[0])/len(intopercentList)}\n')
                     f.write(f'{typeid}_{cyc}_{rgname}_{ss}, duration<=2 percentage: {len(np.where(interactingduration<=2)[0])/len(interactingduration)}\n')
                     f.write('------------------------\n')

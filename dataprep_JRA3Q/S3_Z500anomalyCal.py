@@ -26,16 +26,15 @@ from matplotlib.patches import Polygon
 import matplotlib.path as mpath
 from matplotlib.lines import Line2D
 
-
 STyear = 1979
 EDyear = 2025
 datares = ['1dg', 'F128']
-datarespath = {'1dg': f'/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_{STyear}_{EDyear}_1dg.nc',
-               'F128': f'/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_{STyear}_{EDyear}_F128.nc'}
-varnameList = {'1dg': 'z',
-           'F128': 'var129'}
+datarespath = {'1dg': f'/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_{STyear}_{EDyear}_1dg.nc',
+               'F128': f'/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_{STyear}_{EDyear}_F128.nc'}
+varnameList = {'1dg': 'hgt-pres-an-ll125',
+           'F128': 'hgt-pres-an-ll125'}
 
-for resi in  ['F128', '1dg']:
+for resi in  ['1dg', 'F128']:
 
     print(f'Processing resolution: {resi} -----------------',flush=True)
     filepath = datarespath[resi]
@@ -44,7 +43,7 @@ for resi in  ['F128', '1dg']:
     ds = xr.open_dataset(filepath)
     lats = ds['lat']
     print(lats) # lat increasing!
-    z500 = ds[zname].squeeze()/9.80665 # unit: m
+    z500 = ds[zname].squeeze() # unit: m
 
     print(z500.shape)
     # 02 calculate anomaly
@@ -72,12 +71,12 @@ for resi in  ['F128', '1dg']:
     ds[zname] = Z_anomaly_corrected
     ds = ds.drop_vars('month')
     # write to the nc file
-    ds.to_netcdf(f'/scratch/bell/hu1029/Data/processed/ERA5_Z500anomaly_subtractseasonal_6hr_{STyear}_{EDyear}_{resi}.nc')
+    ds.to_netcdf(f'/scratch/bell/hu1029/Data/processed/JRA3Q_Z500anomaly_subtractseasonal_6hr_{STyear}_{EDyear}_{resi}.nc')
     print('Calculated')
     # save the climatology into netCDF file
     ds2 = ds.copy()
     ds2[zname] = climatology
-    ds2.to_netcdf(f'/scratch/bell/hu1029/Data/processed/ERA5_Z500climatology_monthly_{STyear}_{EDyear}_{resi}.nc')
+    ds2.to_netcdf(f'/scratch/bell/hu1029/Data/processed/JRA3Q_Z500climatology_monthly_{STyear}_{EDyear}_{resi}.nc')
     print('climatology saved to netCDF file -----------------',flush=True)
 
     # 04 plot anomaly
@@ -101,7 +100,10 @@ for resi in  ['F128', '1dg']:
     plt.colorbar(cf,ax=axes,orientation='horizontal',label='Z500 anomaly (m)',fraction=0.04, pad=0.1)
 
     plt.show()
-    plt.savefig(f'ZanomClim12Months_{resi}_{STyear}_{EDyear}.png')
+    plt.savefig(f'JRA3Q_ZanomClim12Months_{resi}_{STyear}_{EDyear}.png')
+
+    # delete the data and release memory
+    del ds, z500, zonal_mean, zonal_mean_expanded, Z_anomaly, Z_anomaly_month, Z_anomaly_month_smoothed, climatology, Zclimatology, Z_anomaly_corrected, ds2, climatologyarr, lat, lon
 
     print('Done')
 

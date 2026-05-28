@@ -34,42 +34,42 @@ import imageio
 from matplotlib.dates import DateFormatter
 
 # %% dataset settings -------------------------------------------------------------
-datasets = ["ERA5"]
+datasets = ["ERA5", "MERRA2", "JRA3Q"]
 
 OUT_DIR_List = {
     "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5",
     "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55"
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q"
 }
 yearnameList = {
-    "ERA5": "1979_2021",
-    "MERRA2": "1980_2021",
-    "JRA55": "1979_2021"
+    "ERA5": "1979_2025",
+    "MERRA2": "1980_2025",
+    "JRA3Q": "1979_2025"
 }
 timerefFile = {
-    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2021_1dg.nc",
-    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2021_1dg.nc",
-    "JRA55": "/scratch/bell/hu1029/Data/processed/JRA55_Z500_6hr_1979_2021_1dg.nc"
+    "ERA5": "/scratch/bell/hu1029/Data/processed/ERA5_Z500_6hr_1979_2025_1dg.nc",
+    "MERRA2": "/scratch/bell/hu1029/Data/processed/MERRA2_Z500_6hr_1980_2025_1dg.nc",
+    "JRA3Q": "/scratch/bell/hu1029/Data/processed/JRA3Q_Z500_6hr_1979_2025_1dg.nc"
 }
 latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lat_1979_2025_6hr.npy"
 }
 lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_LWA_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_LWA_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_LWA_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_LWA_lon_1979_2025_6hr.npy"
 }
 TRACK_latrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lat_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lat_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_TRACK_lat_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lat_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lat_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_TRACK_lat_1979_2025_6hr.npy"
 }
 TRACK_lonrefFile = {
-    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lon_1979_2021_6hr.npy",
-    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lon_1980_2021_6hr.npy",
-    "JRA55": "/scratch/bell/hu1029/LGHW/interm_JRA55/JRA55_TRACK_lon_1979_2021_6hr.npy"
+    "ERA5": "/scratch/bell/hu1029/LGHW/interm_ERA5/ERA5_TRACK_lon_1979_2025_6hr.npy",
+    "MERRA2": "/scratch/bell/hu1029/LGHW/interm_MERRA2/MERRA2_TRACK_lon_1980_2025_6hr.npy",
+    "JRA3Q": "/scratch/bell/hu1029/LGHW/interm_JRA3Q/JRA3Q_TRACK_lon_1979_2025_6hr.npy"
 }
 
 # get the LWA for the blocking and check the LWA for the track
@@ -187,18 +187,18 @@ for dtname in datasets:
 
                     # read in the track's interaction information
                     if rgname == "SP":
-                        with open(f"{INDIR}/{dtname}_{cyc}TrackLWA_1979_2021_SH.pkl", "rb") as file:
+                        with open(f"{INDIR}/{dtname}_{cyc}TrackLWA_{yearname}_SH.pkl", "rb") as file:
                             LWAtrack = pickle.load(file)
                         with open(f"{INDIR}/{dtname}_{cyc}Zanom_allyearTracks_SH.pkl", "rb") as file:
                             track_data = pickle.load(file)
                     else:
-                        with open(f"{INDIR}/{dtname}_{cyc}TrackLWA_1979_2021_NH.pkl", "rb") as file:
+                        with open(f"{INDIR}/{dtname}_{cyc}TrackLWA_{yearname}_NH.pkl", "rb") as file:
                             LWAtrack = pickle.load(file)
                         with open(f"{INDIR}/{dtname}_{cyc}Zanom_allyearTracks_NH.pkl", "rb") as file:
                             track_data = pickle.load(file)
 
-                    # EddyNumber = np.load(f'/scratch/bell/hu1029/LGHW/BlockingType{typeid}_EventEddyNumber_1979_2021_{rgname}_{ss}_{cyc}.npy')
-                    eddyBlockIndex = np.load(f'{INDIR}/{dtname}_TrackBlockingType{typeid}_Index_1979_2021_{rgname}_{ss}_{cyc}.npy')
+                    # EddyNumber = np.load(f'/scratch/bell/hu1029/LGHW/BlockingType{typeid}_EventEddyNumber_1979_2025_{rgname}_{ss}_{cyc}.npy')
+                    eddyBlockIndex = np.load(f'{INDIR}/{dtname}_TrackBlockingType{typeid}_Index_{yearname}_{rgname}_{ss}_{cyc}.npy')
 
                     # get the enter/leaving time for each eddy [the location relative to the blocking]
                     entertime = np.load(f'{INDIR}/{dtname}_EnterTimePointr2Blk1stDay_type{typeid}_{cyc}_{rgname}_{ss}.npy')
@@ -293,6 +293,6 @@ for dtname in datasets:
 
                     plt.tight_layout()
                     plt.show()
-                    plt.savefig(f'{dtname}_MiddleEddiesLWAseries_Type{typeid}_{rgname}_{ss}_{cyc}_composites.png', dpi=300, bbox_inches='tight')
+                    plt.savefig(f'./checkPlots/{dtname}_MiddleEddiesLWAseries_Type{typeid}_{rgname}_{ss}_{cyc}_composites.png', dpi=300, bbox_inches='tight')
 
                     print(f'Fig saved for {dtname}: Type{typeid}_{rgname}_{ss}_{cyc}', flush=True)
