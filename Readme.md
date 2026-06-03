@@ -1,15 +1,33 @@
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 > [!ABSTRACT] Project Overview
-> This repository contains the technical workflow and implementation of the **Atmospheric Blocking as a Serendipitous Encounter Between Traveling Storms and Periodic Seeds**. It integrates multi-source reanalysis data to analyze the interactions between atmospheric blocking and synoptic-scale eddies.
+> This repository contains the technical workflow and implementation of the **Atmospheric Blocking as a Serendipitous Encounter Between Traveling Storms and Periodic Seeds**. 
+
+> [!INFO] Revision Notes (June, 2026)
+> This version includes the following updates: 
+> 1. Added demo data (`./demo_data`): including intermediate results (e.g., blocking labels and event dates, tracks, BAM index, to facilitate code verification and workflow testing.
+> 2. Added Tested Environment description. Added `./environment.yml` and `./cdoVersionInfo.txt` file to document the software environment and package dependencies required to run the analysis workflow.
+> 3. Added Expected Runtime description.
+> 4. LICENSE added 
+> - Intermediate data files referenced hereafter are not included in this repository. They are provided only as examples to illustrate the purpose and expected outputs of different steps in the workflow.
 
 > [!INFO] Revision Notes (April, 2026)
 > This version includes the following updates:
-> 1. Replaced JRA-55 with JRA-3Q dataset
-> 2. Extended all datasets to 2025
-> 3. Recomputed all diagnostics and figures accordingly
- 
+> 2. Replaced JRA-55 with JRA-3Q dataset
+> 3. Extended all datasets to 2025
+> 4. Recomputed all diagnostics and figures accordingly
+
 ---
-# Environment & HPC Setup
+# Tested Environment
+The code has been tested on the following environment:
+- Operating System: Rocky Linux 8.10 (Green Obsidian)
+- Computing Platform: Purdue RCAC Bell Cluster
+- Hostname: bell-fe03.rcac.purdue.edu
+- Python: 3.12.8
+- CDO: 2.4.1
+Core Python package dependencies are listed in environment.yml.
+No non-standard hardware is required. The workflow can benefit from HPC resources due to data volume and computational cost.
+## HPC Setups
 
 > [!SETTINGS] System Configuration
 > - **Compute Cluster**: All scripts and notebooks are executed on **Purdue RCAC Bell** ([Documentation](https://www.rcac.purdue.edu/compute/bell)).
@@ -18,7 +36,6 @@
 > 	1. Run the slurm script to allocate resources.
 > 	2. SSH to the specific compute node assigned.
 > 	3. Select the Python interpreter/kernel as specified in the slurm output.
-
 ## Python Pathing
 Ensure the project root is in your system path:
 ```bash
@@ -29,6 +46,9 @@ In your Jupyter Notebooks, include the following:
 import sys
 sys.path.insert(0, "./Nature_Serendipity")
 ```
+
+## Expected Runtime
+For the provided dataset, most scripts complete within a few minutes/hours on a standard desktop computer. The full analysis using the complete reanalysis datasets may require substantially longer runtimes and is recommended for execution on HPC systems.
 
 ---
 

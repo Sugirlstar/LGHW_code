@@ -1,0 +1,19 @@
+Climate Data Operators version 2.4.4 (https://mpimet.mpg.de/cdo)
+System: x86_64-pc-linux-gnu
+CXX Compiler: /apps/spack/bell-20250305/framework/spack/lib/spack/env/gcc/g++ -std=gnu++20 -g -O2 -fopenmp -pthread
+CXX version : g++ (Spack GCC) 11.1.0
+CXX library : span ranges
+C Compiler: /apps/spack/bell-20250305/framework/spack/lib/spack/env/gcc/gcc -g -O2 -fopenmp -pthread -pthread
+C version : gcc (Spack GCC) 11.1.0
+F77 Compiler: /apps/spack/bell-20250305/framework/spack/lib/spack/env/gcc/gfortran -g -O2
+F77 version : GNU Fortran (Spack GCC) 11.1.0
+Features: 503GB 32threads c++20 OpenMP45 Fortran pthreads HDF5 NC4/HDF5/threadsafe sz udunits2 proj xml2 fftw3 avx2
+Libraries: yac/3.1.0 NetCDF/4.9.2 HDF5/1.14.5 proj/9.4.1 xml2/2.13.4
+CDI data types: SizeType=size_t
+CDI file types: srv ext ieg grb1 grb2 nc1 nc2 nc4 nc4c nc5 nczarr 
+     CDI library version : 2.4.4
+ cgribex library version : 2.3.0
+ ecCodes library version : 2.34.0
+  NetCDF library version : 4.9.2 of Feb 18 2025 21:32:29 $
+    exse library version : 2.0.0
+    FILE library version : 1.9.1

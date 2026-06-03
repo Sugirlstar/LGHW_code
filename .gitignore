@@ -4,6 +4,9 @@
 !*.md
 !*.ipynb
 !.gitignore
+!environment.yml
+!LICENSE
+!cdoVersionInfo.txt
 !*/
 **/drafts/
 *draft*
