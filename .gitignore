@@ -4,6 +4,7 @@
 !*.md
 !*.ipynb
 !.gitignore
+!demo_data/*
 !environment.yml
 !LICENSE
 !cdoVersionInfo.txt
@@ -14,3 +15,4 @@
 
 __pycache__/
 .ipynb_checkpoints/
+demo_data/ERA5_SD_BlockingTotal_label_NH

@@ -5,7 +5,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 > [!INFO] Revision Notes (June, 2026)
 > This version includes the following updates: 
-> 1. Added demo data (`./demo_data`): including intermediate results (e.g., blocking labels and event dates, tracks, BAM index, to facilitate code verification and workflow testing.
+> 1. Added demo data (`./demo_data`): including intermediate results (e.g., blocking dates, tracks, BAM index, to facilitate code verification and workflow testing.
 > 2. Added Tested Environment description. Added `./environment.yml` and `./cdoVersionInfo.txt` file to document the software environment and package dependencies required to run the analysis workflow.
 > 3. Added Expected Runtime description.
 > 4. LICENSE added 
